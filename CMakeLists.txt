@@ -48,7 +48,7 @@ else()
 endif()
 
 if (IS_GNU_COMPILER)
-  include(cmake/GMPConfig.cmake)
+  #include(cmake/GMPConfig.cmake)
   set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3")
   find_program(CCACHE_FOUND ccache)
   if(CCACHE_FOUND)

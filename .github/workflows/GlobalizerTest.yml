@@ -80,6 +80,6 @@ jobs:
       # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
       run: |
         cd ../
-        ./_bin/GLOBALIZER_Benchmarks_tests
+        ./_bin/Globalizer_Benchmarks_tests
         #ctest --build-config ${{ matrix.build_type }}
       
