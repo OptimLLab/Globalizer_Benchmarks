@@ -8,13 +8,13 @@ set(CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE STRING "Available build type
 
 set(GLOBALIZER_BENCHMARKS_OUTPUT_LEVEL "L0" CACHE STRING "Set level of output (L0, L1, L2)")
 option(GLOBALIZER_BENCHMARKS_USE_CUDA "Set ON to use CUDA" OFF)
-option(GLOBALIZER_BENCHMARKS_BUILD_TESTS "Set ON to build tests" ON)
+option(GLOBALIZER_BENCHMARKS_BUILD_TESTS "Set ON to build tests" OFF)
 option(GLOBALIZER_BENCHMARKS_CMAKE_VERBOSE "Set ON to show debug messages in CMake" ON)
 option(GLOBALIZER_BENCHMARKS_MAX_DIMENSION "Set MAX DIMENSION Globalizer" OFF)
 
 option(GLOBALIZER_BENCHMARKS_PYTHON "Set ON to use Python" OFF)
 
-option(BUILD_ALL_TASK "Set On to build all problems" OFF)
+#option(BUILD_ALL_TASK "Set On to build all problems" OFF)
 
 set(GLOBALIZER_BENCHMARKS_DEBUG_SUFFIX   d)
 
