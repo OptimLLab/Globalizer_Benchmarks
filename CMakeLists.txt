@@ -1,0 +1,193 @@
+set(GLOBALIZER_BENCHMARKS_PROJECT_NAME Globalizer_Benchmarks)
+cmake_minimum_required(VERSION 3.31)
+
+cmake_policy(SET CMP0057 NEW)#adds support for the new IN_LIST operator
+
+set(CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE STRING "Available build types" FORCE)
+
+
+set(GLOBALIZER_BENCHMARKS_OUTPUT_LEVEL "L0" CACHE STRING "Set level of output (L0, L1, L2)")
+option(GLOBALIZER_BENCHMARKS_USE_CUDA "Set ON to use CUDA" OFF)
+option(GLOBALIZER_BENCHMARKS_BUILD_TESTS "Set ON to build tests" ON)
+option(GLOBALIZER_BENCHMARKS_CMAKE_VERBOSE "Set ON to show debug messages in CMake" ON)
+option(GLOBALIZER_BENCHMARKS_MAX_DIMENSION "Set MAX DIMENSION Globalizer" OFF)
+
+option(GLOBALIZER_BENCHMARKS_PYTHON "Set ON to use Python" OFF)
+
+option(BUILD_ALL_TASK "Set On to build all problems" OFF)
+
+set(GLOBALIZER_BENCHMARKS_DEBUG_SUFFIX   d)
+
+set(GLOBALIZER_BENCHMARKS_EXECUTABLE_NAME                 ${GLOBALIZER_BENCHMARKS_PROJECT_NAME}${GLOBALIZER_BENCHMARKS_EXECUTABLE_SUFFIX})
+set(GLOBALIZER_BENCHMARKS_EXECUTABLE_NAME_DEBUG           ${GLOBALIZER_BENCHMARKS_EXECUTABLE_NAME}_${GLOBALIZER_BENCHMARKS_DEBUG_SUFFIX})
+set(GLOBALIZER_BENCHMARKS_EXECUTABLE_NAME_RELEASE         ${GLOBALIZER_BENCHMARKS_EXECUTABLE_NAME})
+set(GLOBALIZER_BENCHMARKS_LIB_NAME                        ${GLOBALIZER_BENCHMARKS_EXECUTABLE_NAME}_l)
+set(GLOBALIZER_BENCHMARKS_LIB_NAME_RELEASE                ${GLOBALIZER_BENCHMARKS_EXECUTABLE_NAME}_l)
+set(GLOBALIZER_BENCHMARKS_LIB_NAME_DEBUG                  ${GLOBALIZER_BENCHMARKS_EXECUTABLE_NAME}_l_${GLOBALIZER_BENCHMARKS_DEBUG_SUFFIX})
+
+
+
+set(CMAKE_CXX_STANDARD 17)
+project(${GLOBALIZER_BENCHMARKS_PROJECT_NAME})
+
+set(GLOBALIZER_BENCHMARKS_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/_bin CACHE STRING "Output directory")
+
+message("GLOBALIZER_BENCHMARKS_OUTPUT_DIRECTORY" ${GLOBALIZER_BENCHMARKS_OUTPUT_DIRECTORY})
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG   ${GLOBALIZER_BENCHMARKS_OUTPUT_DIRECTORY})
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${GLOBALIZER_BENCHMARKS_OUTPUT_DIRECTORY})
+
+include(Benchmarks_utils.cmake)
+GLOBALIZER_BENCHMARKS_initialize()
+
+if(${GLOBALIZER_BENCHMARKS_MAX_DIMENSION})
+	message("true " ${GLOBALIZER_BENCHMARKS_MAX_DIMENSION})
+	add_definitions(-DGLOBALIZER_BENCHMARKS_MAX_DIMENSION=${GLOBALIZER_BENCHMARKS_MAX_DIMENSION})
+else()
+	message("false" ${GLOBALIZER_BENCHMARKS_MAX_DIMENSION})
+	add_definitions(-DGLOBALIZER_BENCHMARKS_MAX_DIMENSION=10)
+endif()
+
+if (IS_GNU_COMPILER)
+  include(cmake/GMPConfig.cmake)
+  set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3")
+  find_program(CCACHE_FOUND ccache)
+  if(CCACHE_FOUND)
+	set(CMAKE_CXX_COMPILER_LAUNCHER ccache)
+  endif(CCACHE_FOUND)
+elseif (IS_MICROSOFT_COMPILER)
+  add_definitions(/EHsc /openmp -D_CRT_SECURE_NO_WARNINGS -DNOMINMAX)
+  replace_compiler_flag("W3" "W4")
+  set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /Ox /wd4100")
+  if (GLOBALIZER_BENCHMARKS_TARGET_ARCH MATCHES "x86")
+	set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /arch:SSE2")
+  endif()
+  set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /wd4100")
+  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /ignore:4099")
+else()
+  set(OpenMP_C_FLAGS "-fopenmp")
+  set(OpenMP_CXX_FLAGS "-fopenmp")
+endif()
+
+
+if(NOT (CMAKE_BUILD_TYPE IN_LIST CMAKE_CONFIGURATION_TYPES))
+  set(CMAKE_BUILD_TYPE "Release" CACHE STRING "build type" FORCE)
+  message(STATUS "Unknown build type has been changed to " ${CMAKE_BUILD_TYPE})
+endif()
+
+
+init_doxygen()
+
+
+# set include directories for project
+set(GLOBALIZER_BENCHMARKS_EXAMPLES_SRC_DIR ${PROJECT_SOURCE_DIR}/examples)
+set(GLOBALIZER_BENCHMARKS_COMMON_SRC_DIR ${PROJECT_SOURCE_DIR}/Interface)
+
+
+include_directories(
+
+  
+  ${GLOBALIZER_BENCHMARKS_COMMON_SRC_DIR}/include
+
+)
+
+
+file(GLOB ROOT_HEADERS ${GLOBALIZER_BENCHMARKS_COMMON_SRC_DIR}/include/*.h ${GLOBALIZER_BENCHMARKS_COMMON_SRC_DIR}/include/*.hpp )
+
+file(GLOB ROOT_SOURCES ${GLOBALIZER_BENCHMARKS_COMMON_SRC_DIR}/src/*.c ${GLOBALIZER_BENCHMARKS_COMMON_SRC_DIR}/src/*.cpp)
+
+
+if (GLOBALIZER_BENCHMARKS_USE_CUDA)
+  find_package(CUDA REQUIRED)
+endif()
+
+# build main library and executable
+set(ALL_SRC_FILES ${ROOT_HEADERS} ${ROOT_SOURCES})
+
+#add_library(${GLOBALIZER_BENCHMARKS_LIB_NAME} STATIC ${ALL_SRC_FILES})
+add_executable(${GLOBALIZER_BENCHMARKS_PROJECT_NAME} ${ALL_SRC_FILES} ${GLOBALIZER_BENCHMARKS_EXAMPLES_SRC_DIR}/Main.cpp)
+
+
+if (${GLOBALIZER_BENCHMARKS_PYTHON})
+  find_package (Python COMPONENTS Interpreter Development NumPy)
+
+#set(EXTRA_DEFINES "")
+#if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+  #set(EXTRA_DEFINES PYLIBNAME="${Python_LIBRARIES}")
+  message("Python pname ${Python_LIBRARIES}")
+  message("Python end")
+  #message(${PYLIBNAME})
+  add_definitions(-DUSE_PYTHON)
+#endif()
+
+  if (Python_Development_FOUND)
+    message("Python Development FOUND")
+  endif()
+  
+  if (Python_NumPy_FOUND)
+    message("Python NumPy FOUND")
+  endif()
+
+else()
+  message("Python not use")
+  set(Python_INCLUDE_DIRS "")
+  set(Python_NumPy_INCLUDE_DIRS "")
+  set(Python_LIBRARIES "")
+  
+endif()
+
+target_include_directories(${GLOBALIZER_BENCHMARKS_PROJECT_NAME} PRIVATE ${GLOBALIZER_BENCHMARKS_COMMON_SRC_DIR}
+												  PRIVATE ${Python_INCLUDE_DIRS} 
+												  PRIVATE ${Python_NumPy_INCLUDE_DIRS})
+												  
+include_directories(${Python_INCLUDE_DIRS} ${Python_NumPy_INCLUDE_DIRS})
+
+	
+target_link_libraries(${GLOBALIZER_BENCHMARKS_PROJECT_NAME} ${Python_LIBRARIES})
+
+
+
+set_target_properties(${GLOBALIZER_BENCHMARKS_PROJECT_NAME} PROPERTIES OUTPUT_NAME_DEBUG ${GLOBALIZER_BENCHMARKS_EXECUTABLE_NAME_DEBUG})
+set_target_properties(${GLOBALIZER_BENCHMARKS_PROJECT_NAME} PROPERTIES OUTPUT_NAME_RELEASE ${GLOBALIZER_BENCHMARKS_EXECUTABLE_NAME_RELEASE})
+
+
+#add tests
+if(${GLOBALIZER_BENCHMARKS_BUILD_TESTS})
+  enable_testing()
+  add_subdirectory(${PROJECT_SOURCE_DIR}/third_party/gtest)
+  add_subdirectory(${PROJECT_SOURCE_DIR}/tests)
+endif()
+
+
+# add problems
+
+message("Start build problems!")
+subdirlist(SUBDIRS ${PROJECT_SOURCE_DIR}/Problems)
+foreach(subdir ${SUBDIRS})
+	message("Build problem  " ${subdir})
+	add_subdirectory(${subdir})
+endforeach()
+
+
+if(${GLOBALIZER_BENCHMARKS_CMAKE_VERBOSE})
+  print_build_config()
+endif()
+
+
+# create source groups for VS IDE projects
+if (IS_MICROSOFT_COMPILER)
+  set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+  #set_property(TARGET pugixml PROPERTY FOLDER "3rd-party")
+  if(${GLOBALIZER_BENCHMARKS_BUILD_TESTS})
+    set_property(TARGET gtest gmock gmock_main gtest_main PROPERTY FOLDER "3rd-party")
+  endif()
+
+
+  source_group("Header Files" FILES ${ROOT_HEADERS})
+
+
+  source_group("Source Files" FILES ${ROOT_SOURCES})
+
+  
+  
+  
+endif()

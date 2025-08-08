@@ -1,1 +1,6 @@
-# Globalizer_Benchmarks
+# Globalizer Benchmarks — это набор тестовых задач глобальной оптимизации
+## Краткое описание
+Библиотека 
+
+## Документация по системе
+doc/build/html/index.html
