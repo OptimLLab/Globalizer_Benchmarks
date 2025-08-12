@@ -45,14 +45,47 @@ int main(int argc, char* argv[])
   std::cout << "\n\n" << std::endl;
   
   ProblemManager manager;
-  IProblem* problem = 0;
+  
 
-
-  if (InitProblem(manager, problem, "X2.dll"))
+  IProblem* problemX2 = 0;
+  if (InitProblem(manager, problemX2, "X2.dll"))
   {
     std::cout << "Error during problem initialization\n";
     return 0;
   }
+  else
+  {
+    problemX2->SetDimension(2);
+    double y[2] = { 0.5, 0.5 };
+    double value = problemX2->CalculateFunctionals(y, 0);
+  }
+
+  IProblem* problemRastrigin = 0;
+  if (InitProblem(manager, problemRastrigin, "rastrigin.dll"))
+  {
+    std::cout << "Error during problem initialization\n";
+    return 0;
+  }
+  else
+  {
+    problemRastrigin->SetDimension(2);
+    double y[2] = { 0.5, 0.5 };
+    double value = problemRastrigin->CalculateFunctionals(y, 0);
+  }
+
+  IProblem* problemRastriginInt = 0;
+  if (InitProblem(manager, problemRastriginInt, "rastriginInt.dll"))
+  {
+    std::cout << "Error during problem initialization\n";
+    return 0;
+  }
+  else
+  {
+    problemRastriginInt->SetDimension(2);
+    double y[2] = { 0.5, 0.5 };
+    double value = problemRastriginInt->CalculateFunctionals(y, 0);
+  }
+
 
   return 0;
 }

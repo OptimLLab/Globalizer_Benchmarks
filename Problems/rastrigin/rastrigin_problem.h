@@ -7,7 +7,7 @@
 
 #include "ProblemInterface.h"
 
-class TRastriginProblem : public IProblem
+class RastriginProblem : public IProblem
 {
 protected:
 
@@ -17,7 +17,7 @@ protected:
 
 public:
 
-  TRastriginProblem();
+  RastriginProblem();
 
   virtual int SetConfigPath(const std::string& configPath);
   virtual int SetDimension(int dimension);
@@ -34,7 +34,7 @@ public:
 
   virtual double CalculateFunctionals(const double* x, int fNumber);
 
-  ~TRastriginProblem();
+  ~RastriginProblem();
 };
 
 extern "C" LIB_EXPORT_API IProblem* create();

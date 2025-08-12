@@ -32,7 +32,7 @@ double X_magic[] = {
 
 double minVal = 0.0;
 // ------------------------------------------------------------------------------------------------
-TX2Problem::TX2Problem()
+X2Problem::X2Problem()
 {
   mDimension = 1;
   mIsInitialized = false;
@@ -42,12 +42,12 @@ TX2Problem::TX2Problem()
 
 }
 
-int TX2Problem::SetConfigPath(const std::string& configPath)
+int X2Problem::SetConfigPath(const std::string& configPath)
 {
   return IProblem::OK;
 }
 
-int TX2Problem::SetDimension(int dimension)
+int X2Problem::SetDimension(int dimension)
 {
   if (dimension > 0 && dimension <= mMaxDimension)
   {
@@ -58,12 +58,12 @@ int TX2Problem::SetDimension(int dimension)
     return IProblem::ERROR;
 }
 
-int TX2Problem::GetDimension() const
+int X2Problem::GetDimension() const
 {
   return mDimension;
 }
 
-int TX2Problem::Initialize()
+int X2Problem::Initialize()
 {
   if (mDimension > 0)
   {
@@ -76,18 +76,17 @@ int TX2Problem::Initialize()
 
 
 // ------------------------------------------------------------------------------------------------
-void TX2Problem::GetBounds(double* lower, double *upper)
+void X2Problem::GetBounds(double* lower, double* upper)
 {
-  //if (mIsInitialized)
-    for (int i = 0; i < mDimension; i++)
-    {
-      lower[i] = mLeftBorder;
-      upper[i] = mRightBorder;
-    }
+  for (int i = 0; i < mDimension; i++)
+  {
+    lower[i] = mLeftBorder;
+    upper[i] = mRightBorder;
+  }
 }
 
 // ------------------------------------------------------------------------------------------------
-int TX2Problem::GetOptimumValue(double& value) const
+int X2Problem::GetOptimumValue(double& value) const
 {
   //if (!mIsInitialized)
   //  return IProblem::UNDEFINED;
@@ -107,7 +106,7 @@ int TX2Problem::GetOptimumValue(double& value) const
 }
 
 // ------------------------------------------------------------------------------------------------
-int TX2Problem::GetOptimumPoint(double* point) const
+int X2Problem::GetOptimumPoint(double* point) const
 {
   //if (!mIsInitialized)
   //  return IProblem::UNDEFINED;
@@ -138,24 +137,24 @@ int TX2Problem::GetOptimumPoint(double* point) const
   return IProblem::OK;
 }
 
-int TX2Problem::GetNumberOfFunctions() const
+int X2Problem::GetNumberOfFunctions() const
 {
-    return 0;
+  return 1;
 }
 
-int TX2Problem::GetNumberOfConstraints() const
+int X2Problem::GetNumberOfConstraints() const
 {
-    return 0;
+  return 0;
 }
 
-int TX2Problem::GetNumberOfCriterions() const
+int X2Problem::GetNumberOfCriterions() const
 {
-    return 0;
+  return 1;
 }
 
 
 // ------------------------------------------------------------------------------------------------
-double TX2Problem::CalculateFunctionals(const double* x, int fNumber)
+double X2Problem::CalculateFunctionals(const double* x, int fNumber)
 {
   //function_number
   double sum = 0.;
@@ -171,7 +170,7 @@ double TX2Problem::CalculateFunctionals(const double* x, int fNumber)
 }
 
 // ------------------------------------------------------------------------------------------------
-TX2Problem::~TX2Problem()
+X2Problem::~X2Problem()
 {
 
 }
@@ -179,7 +178,7 @@ TX2Problem::~TX2Problem()
 // ------------------------------------------------------------------------------------------------
 LIB_EXPORT_API IProblem* create()
 {
-  return new TX2Problem();
+  return new X2Problem();
 }
 
 // ------------------------------------------------------------------------------------------------

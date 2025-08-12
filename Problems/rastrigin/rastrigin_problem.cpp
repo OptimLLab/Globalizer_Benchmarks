@@ -5,20 +5,20 @@
 #include <iostream>
 
 // ------------------------------------------------------------------------------------------------
-TRastriginProblem::TRastriginProblem()
+RastriginProblem::RastriginProblem()
 {
   mIsInitialized = false;
   mDimension = 1;
 }
 
 // ------------------------------------------------------------------------------------------------
-int TRastriginProblem::SetConfigPath(const std::string& configPath)
+int RastriginProblem::SetConfigPath(const std::string& configPath)
 {
   return IProblem::OK;
 }
 
 // ------------------------------------------------------------------------------------------------
-int TRastriginProblem::SetDimension(int dimension)
+int RastriginProblem::SetDimension(int dimension)
 {
   if(dimension > 0 && dimension <= mMaxDimension)
   {
@@ -30,13 +30,13 @@ int TRastriginProblem::SetDimension(int dimension)
 }
 
 // ------------------------------------------------------------------------------------------------
-int TRastriginProblem::GetDimension() const
+int RastriginProblem::GetDimension() const
 {
   return mDimension;
 }
 
 // ------------------------------------------------------------------------------------------------
-int TRastriginProblem::Initialize()
+int RastriginProblem::Initialize()
 {
   if (mDimension > 0)
   {
@@ -48,7 +48,7 @@ int TRastriginProblem::Initialize()
 }
 
 // ------------------------------------------------------------------------------------------------
-void TRastriginProblem::GetBounds(double* lower, double *upper)
+void RastriginProblem::GetBounds(double* lower, double *upper)
 {
   if (mIsInitialized)
     for (int i = 0; i < mDimension; i++)
@@ -59,7 +59,7 @@ void TRastriginProblem::GetBounds(double* lower, double *upper)
 }
 
 // ------------------------------------------------------------------------------------------------
-int TRastriginProblem::GetOptimumValue(double& value) const
+int RastriginProblem::GetOptimumValue(double& value) const
 {
   if (!mIsInitialized)
     return IProblem::UNDEFINED;
@@ -69,7 +69,7 @@ int TRastriginProblem::GetOptimumValue(double& value) const
 }
 
 // ------------------------------------------------------------------------------------------------
-int TRastriginProblem::GetOptimumPoint(double* point) const
+int RastriginProblem::GetOptimumPoint(double* point) const
 {
   if (!mIsInitialized)
     return IProblem::UNDEFINED;
@@ -80,25 +80,25 @@ int TRastriginProblem::GetOptimumPoint(double* point) const
 }
 
 // ------------------------------------------------------------------------------------------------
-int TRastriginProblem::GetNumberOfFunctions() const
+int RastriginProblem::GetNumberOfFunctions() const
 {
   return 1;
 }
 
 // ------------------------------------------------------------------------------------------------
-int TRastriginProblem::GetNumberOfConstraints() const
+int RastriginProblem::GetNumberOfConstraints() const
 {
   return 0;
 }
 
 // ------------------------------------------------------------------------------------------------
-int TRastriginProblem::GetNumberOfCriterions() const
+int RastriginProblem::GetNumberOfCriterions() const
 {
   return 1;
 }
 
 // ------------------------------------------------------------------------------------------------
-double TRastriginProblem::CalculateFunctionals(const double* x, int fNumber)
+double RastriginProblem::CalculateFunctionals(const double* x, int fNumber)
 {
   double sum = 0.;
   for (int j = 0; j < mDimension; j++)
@@ -107,7 +107,7 @@ double TRastriginProblem::CalculateFunctionals(const double* x, int fNumber)
 }
 
 // ------------------------------------------------------------------------------------------------
-TRastriginProblem::~TRastriginProblem()
+RastriginProblem::~RastriginProblem()
 {
 
 }
@@ -115,7 +115,7 @@ TRastriginProblem::~TRastriginProblem()
 // ------------------------------------------------------------------------------------------------
 LIB_EXPORT_API IProblem* create()
 {
-  return new TRastriginProblem();
+  return new RastriginProblem();
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -136,7 +136,7 @@ LIB_EXPORT_API double Calculation(double x, double y)
 {
   double result = 0;
 
-  TRastriginProblem rastr;
+  RastriginProblem rastr;
   rastr.SetDimension(2);
   rastr.Initialize();
   double point[2] = { x, y };
@@ -151,7 +151,7 @@ LIB_EXPORT_API double GetUpperBounds()
 {
   double result = 0;
 
-  TRastriginProblem rastr;
+  RastriginProblem rastr;
   rastr.SetDimension(2);
   rastr.Initialize();
   double Upper[2] = { 0.0, 0.0 };
@@ -168,7 +168,7 @@ LIB_EXPORT_API double GetLowerBounds()
 {
   double result = 0;
 
-  TRastriginProblem rastr;
+  RastriginProblem rastr;
   rastr.SetDimension(2);
   rastr.Initialize();
   double Upper[2] = { 0.0, 0.0 };

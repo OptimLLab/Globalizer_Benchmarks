@@ -9,7 +9,7 @@
 
 #include "ProblemInterface.h"
 
-class TX2Problem : public IProblem
+class X2Problem : public IProblem
 {
 protected:
 protected:
@@ -24,7 +24,7 @@ protected:
 
 public:
 
-  TX2Problem();
+  X2Problem();
 
   virtual int SetConfigPath(const std::string& configPath);
   virtual int SetDimension(int dimension);
@@ -41,7 +41,7 @@ public:
 
   virtual double CalculateFunctionals(const double* x, int fNumber);
 
-  ~TX2Problem();
+  ~X2Problem();
 };
 
 extern "C" LIB_EXPORT_API IProblem* create();

@@ -24,6 +24,7 @@ int InitProblem(ProblemManager& problemManager, IProblem*& problem, std::string 
   }
 
   IProblem* baseProblem = problemManager.GetProblem();
+  baseProblem->Initialize();
 
   problem = baseProblem;
 
