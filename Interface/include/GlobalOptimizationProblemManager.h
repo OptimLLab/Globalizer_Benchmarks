@@ -28,7 +28,7 @@
 #ifndef __PROBLEMMANAGER_H__
 #define __PROBLEMMANAGER_H__
 
-#include "ProblemInterface.h"
+#include "IGlobalOptimizationProblem.h"
 #include <string>
 
 #ifdef WIN32
@@ -44,7 +44,7 @@
 
 В классе #ProblemManager реализованы основные функции, для загрузки\выгрузки библиотек с задачами
 */
-class ProblemManager
+class GlobalOptimizationProblemManager
 {
 protected:
 
@@ -55,11 +55,11 @@ protected:
     void *mLibHandle;
   #endif
   ///Указатель на созданный объект, описывающий задачу
-  IProblem* mProblem;
+  IGlobalOptimizationProblem* mProblem;
   ///Указатель на функцию-фабрику задач
-  create_t* mCreate;
+  createProblem* mCreate;
   ///Указатель на функцию-деструктор задач
-  destroy_t* mDestroy;
+  destroyProblem* mDestroy;
 
   /// Метод, освобождающий загруженную библиотеку. Будет вызван в деструкторе
   int FreeProblemLibrary();
@@ -81,9 +81,9 @@ public:
   static const int ERROR_ = -2;
 
   ///Конструктор
-  ProblemManager();
+  GlobalOptimizationProblemManager();
   ///Деструктор, в нём вызывается #FreeProblemLibrary
-  ~ProblemManager();
+  ~GlobalOptimizationProblemManager();
 
   /** Метод, загружающий библиотеку, находящуюся по указанному пути
 
@@ -97,8 +97,10 @@ public:
 
   /** Метод возвращает указатель #mProblem
   */
-  IProblem* GetProblem() const;
+  IGlobalOptimizationProblem* GetProblem() const;
 };
+
+int InitGlobalOptimizationProblem(GlobalOptimizationProblemManager& problemManager, IGlobalOptimizationProblem*& problem, std::string libPath);
 
 #endif
 // - end of file ----------------------------------------------------------------------------------

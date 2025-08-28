@@ -42,20 +42,16 @@ X2Problem::X2Problem()
 
 }
 
-int X2Problem::SetConfigPath(const std::string& configPath)
-{
-  return IProblem::OK;
-}
 
 int X2Problem::SetDimension(int dimension)
 {
   if (dimension > 0 && dimension <= mMaxDimension)
   {
     mDimension = dimension;
-    return IProblem::OK;
+    return IGlobalOptimizationProblem::OK;
   }
   else
-    return IProblem::ERROR;
+    return IGlobalOptimizationProblem::ERROR;
 }
 
 int X2Problem::GetDimension() const
@@ -68,15 +64,15 @@ int X2Problem::Initialize()
   if (mDimension > 0)
   {
     mIsInitialized = true;
-    return IProblem::OK;
+    return IGlobalOptimizationProblem::OK;
   }
   else
-    return IProblem::ERROR;
+    return IGlobalOptimizationProblem::ERROR;
 }
 
 
 // ------------------------------------------------------------------------------------------------
-void X2Problem::GetBounds(double* lower, double* upper)
+void X2Problem::GetBounds(std::vector<double>& lower, std::vector<double>& upper)
 {
   for (int i = 0; i < mDimension; i++)
   {
@@ -89,7 +85,7 @@ void X2Problem::GetBounds(double* lower, double* upper)
 int X2Problem::GetOptimumValue(double& value) const
 {
   //if (!mIsInitialized)
-  //  return IProblem::UNDEFINED;
+  //  return IGlobalOptimizationProblem::UNDEFINED;
   value = 0.0;
   int fn = function_number;
   for (int j = 0; j < mDimension; j++)
@@ -102,14 +98,14 @@ int X2Problem::GetOptimumValue(double& value) const
       else
         value += X_magic[(fn - 1) * mDimension * 2 + j * 2 + 0] * mRightBorder;
 
-  return IProblem::OK;
+  return IGlobalOptimizationProblem::OK;
 }
 
 // ------------------------------------------------------------------------------------------------
-int X2Problem::GetOptimumPoint(double* point) const
+int X2Problem::GetOptimumPoint(std::vector<double>& point) const
 {
   //if (!mIsInitialized)
-  //  return IProblem::UNDEFINED;
+  //  return IGlobalOptimizationProblem::UNDEFINED;
   double min_ = 0.0;
 
   for (int i = 0; i < mDimension; i++) {
@@ -134,7 +130,7 @@ int X2Problem::GetOptimumPoint(double* point) const
         point[i] = min_;
     }
   }
-  return IProblem::OK;
+  return IGlobalOptimizationProblem::OK;
 }
 
 int X2Problem::GetNumberOfFunctions() const
@@ -154,7 +150,7 @@ int X2Problem::GetNumberOfCriterions() const
 
 
 // ------------------------------------------------------------------------------------------------
-double X2Problem::CalculateFunctionals(const double* x, int fNumber)
+double X2Problem::CalculateFunctionals(const std::vector<double>& x, int fNumber)
 {
   //function_number
   double sum = 0.;
@@ -176,13 +172,13 @@ X2Problem::~X2Problem()
 }
 
 // ------------------------------------------------------------------------------------------------
-LIB_EXPORT_API IProblem* create()
+LIB_EXPORT_API IGlobalOptimizationProblem* create()
 {
   return new X2Problem();
 }
 
 // ------------------------------------------------------------------------------------------------
-LIB_EXPORT_API void destroy(IProblem* ptr)
+LIB_EXPORT_API void destroy(IGlobalOptimizationProblem* ptr)
 {
   delete ptr;
 }

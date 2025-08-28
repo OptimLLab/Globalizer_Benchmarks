@@ -30,8 +30,7 @@
 #include <unistd.h>
 #endif
 
-#include "ProblemManager.h"
-#include "InitProblem.h"
+#include "GlobalOptimizationProblemManager.h"
 
 
 // ------------------------------------------------------------------------------------------------
@@ -44,11 +43,11 @@ int main(int argc, char* argv[])
   }
   std::cout << "\n\n" << std::endl;
   
-  ProblemManager manager;
+  GlobalOptimizationProblemManager manager;
   
 
-  IProblem* problemX2 = 0;
-  if (InitProblem(manager, problemX2, "X2.dll"))
+  IGlobalOptimizationProblem* problemX2 = 0;
+  if (InitGlobalOptimizationProblem(manager, problemX2, "X2.dll"))
   {
     std::cout << "Error during problem initialization\n";
     return 0;
@@ -56,12 +55,12 @@ int main(int argc, char* argv[])
   else
   {
     problemX2->SetDimension(2);
-    double y[2] = { 0.5, 0.5 };
+    std::vector<double> y = { 0.5, 0.5 };
     double value = problemX2->CalculateFunctionals(y, 0);
   }
 
-  IProblem* problemRastrigin = 0;
-  if (InitProblem(manager, problemRastrigin, "rastrigin.dll"))
+  IGlobalOptimizationProblem* problemRastrigin = 0;
+  if (InitGlobalOptimizationProblem(manager, problemRastrigin, "rastrigin.dll"))
   {
     std::cout << "Error during problem initialization\n";
     return 0;
@@ -69,12 +68,12 @@ int main(int argc, char* argv[])
   else
   {
     problemRastrigin->SetDimension(2);
-    double y[2] = { 0.5, 0.5 };
+    std::vector<double> y = { 0.5, 0.5 };
     double value = problemRastrigin->CalculateFunctionals(y, 0);
   }
 
-  IProblem* problemRastriginInt = 0;
-  if (InitProblem(manager, problemRastriginInt, "rastriginInt.dll"))
+  IGlobalOptimizationProblem* problemRastriginInt = 0;
+  if (InitGlobalOptimizationProblem(manager, problemRastriginInt, "rastriginInt.dll"))
   {
     std::cout << "Error during problem initialization\n";
     return 0;
@@ -82,7 +81,7 @@ int main(int argc, char* argv[])
   else
   {
     problemRastriginInt->SetDimension(2);
-    double y[2] = { 0.5, 0.5 };
+    std::vector<double> y = { 0.5, 1.8 };
     double value = problemRastriginInt->CalculateFunctionals(y, 0);
   }
 

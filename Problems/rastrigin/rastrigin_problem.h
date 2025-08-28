@@ -5,9 +5,9 @@
 #define _CRT_SECURE_NO_WARNINGS
 #endif
 
-#include "ProblemInterface.h"
+#include "IGlobalOptimizationProblem.h"
 
-class RastriginProblem : public IProblem
+class RastriginProblem : public IGlobalOptimizationProblem
 {
 protected:
 
@@ -19,26 +19,25 @@ public:
 
   RastriginProblem();
 
-  virtual int SetConfigPath(const std::string& configPath);
   virtual int SetDimension(int dimension);
   virtual int GetDimension() const;
   virtual int Initialize();
 
-  virtual void GetBounds(double* lower, double *upper);
+  virtual void GetBounds(std::vector<double>& lower, std::vector<double>& upper);
   virtual int GetOptimumValue(double& value) const;
-  virtual int GetOptimumPoint(double* x) const;
+  virtual int GetOptimumPoint(std::vector<double>&) const;
 
   virtual int GetNumberOfFunctions() const;
   virtual int GetNumberOfConstraints() const;
   virtual int GetNumberOfCriterions() const;
 
-  virtual double CalculateFunctionals(const double* x, int fNumber);
+  virtual double CalculateFunctionals(const std::vector<double>& x, int fNumber);
 
   ~RastriginProblem();
 };
 
-extern "C" LIB_EXPORT_API IProblem* create();
-extern "C" LIB_EXPORT_API void destroy(IProblem* ptr);
+extern "C" LIB_EXPORT_API IGlobalOptimizationProblem* create();
+extern "C" LIB_EXPORT_API void destroy(IGlobalOptimizationProblem* ptr);
 extern "C" LIB_EXPORT_API double Calculation1D(double x, int fType, int fNum);
 extern "C" LIB_EXPORT_API double Calculation(double x, double y);
 extern "C" LIB_EXPORT_API double GetUpperBounds();

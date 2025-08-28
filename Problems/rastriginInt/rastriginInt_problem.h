@@ -1,18 +1,18 @@
 #ifndef __RASTRIGINPROBLEM_H__
 #define __RASTRIGINPROBLEM_H__
 
-#include "ProblemInterface.h"
+#include "IGlobalOptimizationProblem.h"
 
-class RastriginIntProblem : public IIntegerProgrammingProblem
+class RastriginIntProblem : public IGlobalOptimizationProblem
 {
 
 
 protected:
   int countContinuousVariables;
 
-  double* A;
-  double* B;
-  double* optPoint;
+  std::vector<double> A;
+  std::vector<double> B;
+  std::vector<double> optPoint;
   double multKoef;
   double optMultKoef;
 
@@ -46,27 +46,21 @@ protected:
     }
   }
 
-  int DiscreteVariable() const
-  {
-    return   mDimension - countContinuousVariables;
-  }
-
 public:
 
   RastriginIntProblem();
 
   virtual int GetOptimumValue(double& value) const;
-  virtual int GetOptimumPoint(double* x) const;
+  virtual int GetOptimumPoint(std::vector<double>& x) const;
 
-  virtual double CalculateFunctionals(const double* x, int fNumber);
+  virtual double CalculateFunctionals(const std::vector<double>& x, int fNumber);
 
 
-  virtual int SetConfigPath(const std::string& configPath);
   virtual int SetDimension(int dimension);
   virtual int GetDimension() const;
 
 
-  virtual void GetBounds(double* lower, double* upper);
+  virtual void GetBounds(std::vector<double>& lower, std::vector<double>& upper);
 
   virtual int GetNumberOfFunctions() const;
   virtual int GetNumberOfConstraints() const;
@@ -76,21 +70,31 @@ public:
 
 
 
-  double MultFunc(const double* x);
+  double MultFunc(const std::vector<double>& x);
 
   ///Инициализация задачи
   virtual int Initialize();
 
-  // Унаследовано через IIntegerProgrammingProblem
-  virtual int GetNumberOfDiscreteVariable();
-  virtual int GetNumberOfValues(int discreteVariable);
-  virtual int GetAllDiscreteValues(int discreteVariable, double* values);
-  virtual int GetNextDiscreteValues(int* mCurrentDiscreteValueIndex, double& value, int discreteVariable, int previousNumber = -2);
-  virtual bool IsPermissibleValue(double value, int discreteVariable);
+  /// Метод возвращает число дискретных параметров, дискретные параметры всегда последние в векторе y
+  virtual int GetNumberOfDiscreteVariable() const;
+
+  /** Метод задает число дискретных параметров, дискретные параметры всегда последние в векторе y,
+  только для задач с частично целочисленными параметрами
+  \param[in] numberOfDiscreteVariable число дискретных параметров
+  \return Код ошибки
+  */
+  virtual int SetNumberOfDiscreteVariable(int numberOfDiscreteVariable);
+
+
+  /** Метод возвращает число целочисленных переменных
+  \return Число целочисленных переменных
+  */
+  virtual int GetDiscreteVariableValues(std::vector< std::vector<double>> values) const;
+
 };
 
-extern "C" LIB_EXPORT_API IProblem* create();
-extern "C" LIB_EXPORT_API void destroy(IProblem* ptr);
+extern "C" LIB_EXPORT_API IGlobalOptimizationProblem* create();
+extern "C" LIB_EXPORT_API void destroy(IGlobalOptimizationProblem* ptr);
 
 #endif
 // - end of file ----------------------------------------------------------------------------------
