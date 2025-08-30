@@ -102,7 +102,7 @@ int X2Problem::GetOptimumValue(double& value) const
 }
 
 // ------------------------------------------------------------------------------------------------
-int X2Problem::GetOptimumPoint(std::vector<double>& point) const
+int X2Problem::GetOptimumPoint(std::vector<double>& point, std::vector<std::string>& u) const
 {
   //if (!mIsInitialized)
   //  return IGlobalOptimizationProblem::UNDEFINED;
@@ -150,7 +150,7 @@ int X2Problem::GetNumberOfCriterions() const
 
 
 // ------------------------------------------------------------------------------------------------
-double X2Problem::CalculateFunctionals(const std::vector<double>& x, int fNumber)
+double X2Problem::CalculateFunctionals(const std::vector<double>& x, std::vector<std::string>& u, int fNumber)
 {
   //function_number
   double sum = 0.;

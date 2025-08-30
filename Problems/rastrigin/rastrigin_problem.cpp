@@ -63,7 +63,7 @@ int RastriginProblem::GetOptimumValue(double& value) const
 }
 
 // ------------------------------------------------------------------------------------------------
-int RastriginProblem::GetOptimumPoint(std::vector<double>& point) const
+int RastriginProblem::GetOptimumPoint(std::vector<double>& point, std::vector<std::string>& u) const
 {
   if (!mIsInitialized)
     return IGlobalOptimizationProblem::UNDEFINED;
@@ -92,7 +92,7 @@ int RastriginProblem::GetNumberOfCriterions() const
 }
 
 // ------------------------------------------------------------------------------------------------
-double RastriginProblem::CalculateFunctionals(const std::vector<double>& x, int fNumber)
+double RastriginProblem::CalculateFunctionals(const std::vector<double>& x, std::vector<std::string>& u, int fNumber)
 {
   double sum = 0.;
   for (int j = 0; j < mDimension; j++)
@@ -134,7 +134,8 @@ LIB_EXPORT_API double Calculation(double x, double y)
   rastr.SetDimension(2);
   rastr.Initialize();
   std::vector<double> point = { x, y };
-  result = rastr.CalculateFunctionals(point, 0);
+  std::vector<std::string> u;
+  result = rastr.CalculateFunctionals(point, u, 0);
 
   //std::cout << "Calculation\n" << std::endl;
   return result;

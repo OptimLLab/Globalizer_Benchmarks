@@ -56,7 +56,8 @@ int main(int argc, char* argv[])
   {
     problemX2->SetDimension(2);
     std::vector<double> y = { 0.5, 0.5 };
-    double value = problemX2->CalculateFunctionals(y, 0);
+    std::vector <std::string> u;
+    double value = problemX2->CalculateFunctionals(y, u, 0);
   }
 
   IGlobalOptimizationProblem* problemRastrigin = 0;
@@ -69,7 +70,8 @@ int main(int argc, char* argv[])
   {
     problemRastrigin->SetDimension(2);
     std::vector<double> y = { 0.5, 0.5 };
-    double value = problemRastrigin->CalculateFunctionals(y, 0);
+    std::vector <std::string> u;
+    double value = problemRastrigin->CalculateFunctionals(y, u, 0);
   }
 
   IGlobalOptimizationProblem* problemRastriginInt = 0;
@@ -81,8 +83,9 @@ int main(int argc, char* argv[])
   else
   {
     problemRastriginInt->SetDimension(2);
-    std::vector<double> y = { 0.5, 1.8 };
-    double value = problemRastriginInt->CalculateFunctionals(y, 0);
+    std::vector<double> y = { 0.5};
+    std::vector <std::string> u = { "B" };
+    double value = problemRastriginInt->CalculateFunctionals(y, u, 0);
   }
 
 

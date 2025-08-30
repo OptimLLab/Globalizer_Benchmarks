@@ -32,13 +32,13 @@ public:
 
   virtual void GetBounds(std::vector<double>& lower, std::vector<double>& upper);
   virtual int GetOptimumValue(double& value) const;
-  virtual int GetOptimumPoint(std::vector<double>& x) const;
+  virtual int GetOptimumPoint(std::vector<double>& x, std::vector<std::string>& u) const;
 
   virtual int GetNumberOfFunctions() const;
   virtual int GetNumberOfConstraints() const;
   virtual int GetNumberOfCriterions() const;
 
-  virtual double CalculateFunctionals(const std::vector<double>& x, int fNumber);
+  virtual double CalculateFunctionals(const std::vector<double>& x, std::vector<std::string>& u, int fNumber);
 
   ~X2Problem();
 };

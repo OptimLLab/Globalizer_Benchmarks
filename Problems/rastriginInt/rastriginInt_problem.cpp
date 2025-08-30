@@ -40,7 +40,7 @@ int RastriginIntProblem::GetOptimumValue(double& value) const
 }
 
 // ------------------------------------------------------------------------------------------------
-int RastriginIntProblem::GetOptimumPoint(std::vector<double>& point) const
+int RastriginIntProblem::GetOptimumPoint(std::vector<double>& point, std::vector<std::string>& u) const
 {
   if (!this->mIsInitialized)
     return IGlobalOptimizationProblem::UNDEFINED;
@@ -56,18 +56,24 @@ int RastriginIntProblem::GetOptimumPoint(std::vector<double>& point) const
 }
 
 // ------------------------------------------------------------------------------------------------
-double RastriginIntProblem::CalculateFunctionals(const std::vector<double>& x, int fNumber)
+double RastriginIntProblem::CalculateFunctionals(const std::vector<double>& x, std::vector<std::string>& u, int fNumber)
 {
   double sum = 0.;
   int j = 0;
+  int i = 0;
+  std::vector<double> y(mDimension);
+  for (; i < countContinuousVariables; i++)
+    y[i] = x[i];
+  for (; i < mDimension; i++)
+    y[i] = discreteValues[u[i - countContinuousVariables][0] - 'A'];
   for (; j < (mDimension - GetNumberOfDiscreteVariable()); j++)
-    sum += x[j] * x[j] - 10. * cos(2.0 * M_PI * x[j]) + 10.0;
+    sum += y[j] * y[j] - 10. * cos(2.0 * M_PI * y[j]) + 10.0;
   for (; j < mDimension; j++)
   { 
-      sum = sum - x[j];
+      sum = sum - y[j];
   }
 
-  sum = sum * (MultFunc(x) + multKoef);
+  sum = sum * (MultFunc(y) + multKoef);
 
   return sum;
 }
@@ -156,7 +162,8 @@ int RastriginIntProblem::Initialize()
   this->GetBounds(A, B);
 
   optPoint.resize(this->mDimension);
-  this->GetOptimumPoint(optPoint);
+  std::vector<std::string> u;
+  this->GetOptimumPoint(optPoint, u);
 
   int count = (int)pow(2.0, this->mDimension);
   for (int i = 0; i < count; i++)
@@ -179,6 +186,13 @@ int RastriginIntProblem::Initialize()
     mNumberOfValues[i] = mDefNumberOfValues;
   }
 
+  discreteValues.resize(mDefNumberOfValues);
+  double d = (mRightBorder - mLeftBorder) / (mDefNumberOfValues - 1);
+  for (int i = 0; i < mDefNumberOfValues; i++)
+  {
+    discreteValues[i] = mLeftBorder + d * i;
+  }
+
   return IGlobalOptimizationProblem::OK;
 }
 
@@ -195,17 +209,15 @@ int RastriginIntProblem::SetNumberOfDiscreteVariable(int numberOfDiscreteVariabl
 }
 
 // ------------------------------------------------------------------------------------------------
-inline int RastriginIntProblem::GetDiscreteVariableValues(std::vector< std::vector<double>> values) const
+inline int RastriginIntProblem::GetDiscreteVariableValues(std::vector< std::vector<std::string>> values) const
 {
   values.resize(GetNumberOfDiscreteVariable());
 
   for (int i = 0; i < GetNumberOfDiscreteVariable(); i++)
   {
-    double d = (mRightBorder - mLeftBorder) / (mNumberOfValues[i] - 1);
-
     for (int j = 0; j < mNumberOfValues[i]; j++)
     {
-      values[i][j] = mLeftBorder + d * j;
+      values[i][j] = std::string('A' + j, 1);
     }
   }
   return IGlobalOptimizationProblem::OK;

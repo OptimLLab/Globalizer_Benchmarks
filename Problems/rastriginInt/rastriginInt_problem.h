@@ -13,6 +13,7 @@ protected:
   std::vector<double> A;
   std::vector<double> B;
   std::vector<double> optPoint;
+  std::vector<double> discreteValues;
   double multKoef;
   double optMultKoef;
 
@@ -51,9 +52,9 @@ public:
   RastriginIntProblem();
 
   virtual int GetOptimumValue(double& value) const;
-  virtual int GetOptimumPoint(std::vector<double>& x) const;
+  virtual int GetOptimumPoint(std::vector<double>& x, std::vector<std::string>& u) const;
 
-  virtual double CalculateFunctionals(const std::vector<double>& x, int fNumber);
+  virtual double CalculateFunctionals(const std::vector<double>& x, std::vector<std::string>& u, int fNumber);
 
 
   virtual int SetDimension(int dimension);
@@ -89,7 +90,7 @@ public:
   /** Метод возвращает число целочисленных переменных
   \return Число целочисленных переменных
   */
-  virtual int GetDiscreteVariableValues(std::vector< std::vector<double>> values) const;
+  virtual int GetDiscreteVariableValues(std::vector< std::vector<std::string>> values) const;
 
 };
 

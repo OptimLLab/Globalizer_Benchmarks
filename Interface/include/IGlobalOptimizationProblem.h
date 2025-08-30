@@ -59,12 +59,13 @@ public:
 
   /** Метод, вычисляющий функции задачи
 
-  \param[in] y Точка, в которой необходимо вычислить значение
+  \param[in] y непрерывные координаты точки, в которой необходимо вычислить значение
+  \param[in] u целочисленые координаты точки, в которой необходимо вычислить значение
   \param[in] fNumber Номер вычисляемой функции. 0 соответствует первому ограничению,
   #GetNumberOfFunctions() - 1 -- последнему критерию
   \return Значение функции с указанным номером
   */
-  virtual double CalculateFunctionals(const std::vector<double>& y, int fNumber);
+  virtual double CalculateFunctionals(const std::vector<double>& y, std::vector<std::string>& u, int fNumber);
 
   /** Метод задаёт размерность задачи
 
@@ -95,7 +96,7 @@ public:
   \param[out] y точка, в которой достигается оптимальное значение
   \return Код ошибки (#OK или #UNDEFINED)
   */
-  virtual int GetOptimumPoint(std::vector<double>& y) const = 0;
+  virtual int GetOptimumPoint(std::vector<double>& y, std::vector<std::string>& u) const = 0;
 
   /** Метод возвращает число общее функций в задаче (оно равно число ограничений + число критериев)
   \return Число функций
@@ -127,20 +128,32 @@ public:
 
   /** Метод возвращает координаты всех точек глобального минимума целевой функции
   и их количество
-  \param[out] y координаты точек, в которых достигается оптимальное значение
+  \param[out] y непрерывные координаты точек, в которых достигается оптимальное значение
+  \param[out] u целочисленные координаты точек, в которых достигается оптимальное значение
   \param[out] n количество точек, в которых достигается оптимальное значение
   \return Код ошибки (#OK или #UNDEFINED)
   */
-  virtual int GetAllOptimumPoint(std::vector<std::vector<double>>& y, int& n) const;
+  virtual int GetAllOptimumPoint(std::vector<std::vector<double>>& y, std::vector<std::vector<std::string>>& u, int& n) const;
 
   /** Метод, вычисляющий функции задачи в нескольких точках одновременно
-  \param[in] y массив, содержащий последовательно записанные многомерные точки, в которых необходимо
+  \param[in] y массив, содержащий последовательно записанные непрерывные координаты точки, в которых необходимо
+  вычислить функционалы задачи
+  \param[in] u массив, содержащий последовательно записанные целочисленые координаты многомерные точки, в которых необходимо
   вычислить функционалы задачи
   \param[in] Номер вычисляемой функции
   \param[in] numPoints количество передаваемых точек
   \param[out] values массив, в который будут записаны вычисленные значения функционалов
   */
-  virtual void CalculateFunctionals(std::vector<std::vector<double>>& y, int fNumber, int& numPoints, std::vector<double>& values);
+  virtual void CalculateFunctionals(std::vector<std::vector<double>>& y, std::vector<std::vector<std::string>>& u, 
+    int fNumber, int& numPoints, std::vector<double>& values);
+
+  /** Метод, вычисляющий все функции задачи
+
+  \param[in] y непрерывные координаты точки, в которой необходимо вычислить значение
+  \param[in] u целочисленые координаты точки, в которой необходимо вычислить значение
+  \return Значение функций
+  */
+  virtual std::vector<double> CalculateAllFunctionals(const std::vector<double>& y, std::vector<std::string>& u);
 
   /// Метод возвращает число дискретных параметров, дискретные параметры всегда последние в векторе y
   virtual int GetNumberOfDiscreteVariable() const;
@@ -155,7 +168,7 @@ public:
   /** Метод возвращает число целочисленных переменных
   \return Число целочисленных переменных
   */
-  virtual int GetDiscreteVariableValues(std::vector< std::vector<double>> values) const;
+  virtual int GetDiscreteVariableValues(std::vector< std::vector<std::string>> values) const;
 
   /** Метод возвращает число непрерывных переменных
   \return Число непрерывных переменных
@@ -207,19 +220,28 @@ inline int IGlobalOptimizationProblem::GetOptimumValue(double& value, int index)
 }
 
 // ------------------------------------------------------------------------------------------------
-inline int IGlobalOptimizationProblem::GetAllOptimumPoint(std::vector<std::vector<double>>& y, int& n) const
+inline int IGlobalOptimizationProblem::GetAllOptimumPoint(std::vector<std::vector<double>>& y, std::vector<std::vector<std::string>>& u, int& n) const
 {
   return IGlobalOptimizationProblem::UNDEFINED;
 }
 
 // ------------------------------------------------------------------------------------------------
-inline double IGlobalOptimizationProblem::CalculateFunctionals(const std::vector<double>& y, int fNumber)
+inline double IGlobalOptimizationProblem::CalculateFunctionals(const std::vector<double>& y, std::vector<std::string>& u, int fNumber)
 {
   throw std::runtime_error(std::string("Required overload of the following method is not implemented: ")
     + std::string(__FUNCTION__));
 }
 
-inline void IGlobalOptimizationProblem::CalculateFunctionals(std::vector<std::vector<double>>& y, int fNumber, int& numPoints, std::vector<double>& values)
+// ------------------------------------------------------------------------------------------------
+inline void IGlobalOptimizationProblem::CalculateFunctionals(std::vector<std::vector<double>>& y, std::vector<std::vector<std::string>>& u,
+  int fNumber, int& numPoints, std::vector<double>& values)
+{
+  throw std::runtime_error(std::string("Required overload of the following method is not implemented: ")
+    + std::string(__FUNCTION__));
+}
+
+// ------------------------------------------------------------------------------------------------
+inline std::vector<double> IGlobalOptimizationProblem::CalculateAllFunctionals(const std::vector<double>& y, std::vector<std::string>& u)
 {
   throw std::runtime_error(std::string("Required overload of the following method is not implemented: ")
     + std::string(__FUNCTION__));
@@ -245,7 +267,7 @@ inline int IGlobalOptimizationProblem::SetNumberOfDiscreteVariable(int numberOfD
 }
 
 // ------------------------------------------------------------------------------------------------
-inline int IGlobalOptimizationProblem::GetDiscreteVariableValues(std::vector< std::vector<double>> values) const
+inline int IGlobalOptimizationProblem::GetDiscreteVariableValues(std::vector< std::vector<std::string>> values) const
 {
   return IGlobalOptimizationProblem::UNDEFINED;
 }
