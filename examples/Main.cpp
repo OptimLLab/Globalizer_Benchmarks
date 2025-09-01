@@ -88,6 +88,20 @@ int main(int argc, char* argv[])
     double value = problemRastriginInt->CalculateFunctionals(y, u, 0);
   }
 
+  IGlobalOptimizationProblem* problePythonObjective = 0;
+  if (InitGlobalOptimizationProblem(manager, problePythonObjective, "python_objective.dll"))
+  {
+    std::cout << "Error during problem initialization\n";
+    return 0;
+  }
+  else
+  {
+    //problePythonObjective->SetDimension(2);
+    std::vector<double> y = { 0.5 };
+    std::vector <std::string> u = { "B" };
+    double value = problePythonObjective->CalculateFunctionals(y, u, 0);
+  }
+
 
   return 0;
 }
