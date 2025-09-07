@@ -79,3 +79,6 @@ ipch/
 *.sdf
 *.cachefile
 *.VC.db
+
+#Python
+*.pyc

@@ -14,24 +14,24 @@
 //                                                                         //
 /////////////////////////////////////////////////////////////////////////////
 
-#include "ProblemManager.h"
+#include "GlobalOptimizationProblemManager.h"
 #include <iostream>
 
 // ------------------------------------------------------------------------------------------------
-ProblemManager::ProblemManager() : mLibHandle(NULL), mProblem(NULL),
+GlobalOptimizationProblemManager::GlobalOptimizationProblemManager() : mLibHandle(NULL), mProblem(NULL),
   mCreate(NULL), mDestroy(NULL)
 {
 
 }
 
 // ------------------------------------------------------------------------------------------------
-ProblemManager::~ProblemManager()
+GlobalOptimizationProblemManager::~GlobalOptimizationProblemManager()
 {
   FreeProblemLibrary();
 }
 
 // ------------------------------------------------------------------------------------------------
-int ProblemManager::LoadProblemLibrary(const std::string& libPath)
+int GlobalOptimizationProblemManager::LoadProblemLibrary(const std::string& libPath)
 {
   if (mLibHandle)
     FreeProblemLibrary();
@@ -40,37 +40,37 @@ int ProblemManager::LoadProblemLibrary(const std::string& libPath)
     if (!mLibHandle)
     {
         std::cerr << "Cannot load library: " << TEXT(libPath.c_str()) << std::endl;
-        return ProblemManager::ERROR_;
+        return GlobalOptimizationProblemManager::ERROR_;
     }
   #else
     mLibHandle = dlopen(libPath.c_str(), RTLD_LAZY);
     if (!mLibHandle)
     {
         std::cerr << dlerror() << std::endl;
-        return ProblemManager::ERROR_;
+        return GlobalOptimizationProblemManager::ERROR_;
     }
   #endif
   #ifdef WIN32
-    mCreate = (create_t*) GetProcAddress(mLibHandle, "create");
-    mDestroy = (destroy_t*) GetProcAddress(mLibHandle, "destroy");
+    mCreate = (createProblem*) GetProcAddress(mLibHandle, "create");
+    mDestroy = (destroyProblem*) GetProcAddress(mLibHandle, "destroy");
     if (!mCreate || !mDestroy)
     {
       std::cerr << "Cannot load symbols: " << GetLastError() << std::endl;
       FreeLibHandler();
-      return ProblemManager::ERROR_;
+      return GlobalOptimizationProblemManager::ERROR_;
     }
   #else
     dlerror();
-    mCreate = (create_t*) dlsym(mLibHandle, "create");
+    mCreate = (createProblem*) dlsym(mLibHandle, "create");
     char* dlsym_error = dlerror();
     if (dlsym_error)
     {
       mCreate = NULL;
       std::cerr << dlsym_error << std::endl;
       FreeLibHandler();
-      return ProblemManager::ERROR_;
+      return GlobalOptimizationProblemManager::ERROR_;
     }
-    mDestroy = (destroy_t*) dlsym(mLibHandle, "destroy");
+    mDestroy = (destroyProblem*) dlsym(mLibHandle, "destroy");
     dlsym_error = dlerror();
     if (dlsym_error)
     {
@@ -78,7 +78,7 @@ int ProblemManager::LoadProblemLibrary(const std::string& libPath)
       mDestroy = NULL;
       std::cerr << dlsym_error << std::endl;
       FreeLibHandler();
-      return ProblemManager::ERROR_;
+      return GlobalOptimizationProblemManager::ERROR_;
     }
   #endif
 
@@ -91,11 +91,11 @@ int ProblemManager::LoadProblemLibrary(const std::string& libPath)
     std::cerr << "Cannot create problem instance" << std::endl;
   }
 
-  return ProblemManager::OK_;
+  return GlobalOptimizationProblemManager::OK_;
 }
 
 // ------------------------------------------------------------------------------------------------
-void ProblemManager::FreeLibHandler()
+void GlobalOptimizationProblemManager::FreeLibHandler()
 {
   #ifdef WIN32
     FreeLibrary(mLibHandle);
@@ -106,7 +106,7 @@ void ProblemManager::FreeLibHandler()
 }
 
 // ------------------------------------------------------------------------------------------------
-int ProblemManager::FreeProblemLibrary()
+int GlobalOptimizationProblemManager::FreeProblemLibrary()
 {
   if (mProblem)
     mDestroy(mProblem);
@@ -116,15 +116,31 @@ int ProblemManager::FreeProblemLibrary()
   mProblem = NULL;
   mCreate = NULL;
   mDestroy = NULL;
-  return ProblemManager::OK_;
+  return GlobalOptimizationProblemManager::OK_;
 }
 
 // ------------------------------------------------------------------------------------------------
-IProblem* ProblemManager::GetProblem() const
+IGlobalOptimizationProblem* GlobalOptimizationProblemManager::GetProblem() const
 {
   if (mProblem)
     return mProblem;
   else
     return NULL;
+}
+
+// ------------------------------------------------------------------------------------------------
+int InitGlobalOptimizationProblem(GlobalOptimizationProblemManager& problemManager, IGlobalOptimizationProblem*& problem, std::string libPath)
+{
+  if (problemManager.LoadProblemLibrary(libPath) != GlobalOptimizationProblemManager::OK_)
+  {
+    //сообщение об ошибке печатает manager
+    return 1;
+  }
+
+  IGlobalOptimizationProblem* baseProblem = problemManager.GetProblem();
+  baseProblem->Initialize();
+
+  problem = baseProblem; 
+  return 0;
 }
 // - end of file ----------------------------------------------------------------------------------
