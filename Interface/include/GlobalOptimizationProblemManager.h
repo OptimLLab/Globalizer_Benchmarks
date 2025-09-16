@@ -25,8 +25,8 @@
 
 */
 
-#ifndef __PROBLEMMANAGER_H__
-#define __PROBLEMMANAGER_H__
+#ifndef __GLOBAL_OPTIMIZATION_PROBLEM_MANAGER_H__
+#define __GLOBAL_OPTIMIZATION_PROBLEM_MANAGER_H__
 
 #include "IGlobalOptimizationProblem.h"
 #include <string>
