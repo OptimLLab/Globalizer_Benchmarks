@@ -168,7 +168,7 @@ public:
   /** Метод возвращает число целочисленных переменных
   \return Число целочисленных переменных
   */
-  virtual int GetDiscreteVariableValues(std::vector< std::vector<std::string>> values) const;
+  virtual int GetDiscreteVariableValues(std::vector< std::vector<std::string>>& values) const;
 
   /** Метод возвращает число непрерывных переменных
   \return Число непрерывных переменных
@@ -267,7 +267,7 @@ inline int IGlobalOptimizationProblem::SetNumberOfDiscreteVariable(int numberOfD
 }
 
 // ------------------------------------------------------------------------------------------------
-inline int IGlobalOptimizationProblem::GetDiscreteVariableValues(std::vector< std::vector<std::string>> values) const
+inline int IGlobalOptimizationProblem::GetDiscreteVariableValues(std::vector< std::vector<std::string>>& values) const
 {
   return IGlobalOptimizationProblem::UNDEFINED;
 }

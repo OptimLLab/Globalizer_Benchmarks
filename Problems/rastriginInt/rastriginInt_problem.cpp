@@ -49,9 +49,11 @@ int RastriginIntProblem::GetOptimumPoint(std::vector<double>& point, std::vector
     point[i] = 0.0;
 
   auto ndv = GetNumberOfDiscreteVariable();
+  std::vector< std::vector<std::string>> values;
+  GetDiscreteVariableValues(values);
 
   for (int i = 0; i < ndv; i++)
-    point[i + countContinuousVariables] = mRightBorder;
+    u[i] = values[i][values[i].size() - 1];
   return IGlobalOptimizationProblem::OK;
 }
 
@@ -69,8 +71,8 @@ double RastriginIntProblem::CalculateFunctionals(const std::vector<double>& x, s
   for (; j < (mDimension - GetNumberOfDiscreteVariable()); j++)
     sum += y[j] * y[j] - 10. * cos(2.0 * M_PI * y[j]) + 10.0;
   for (; j < mDimension; j++)
-  { 
-      sum = sum - y[j];
+  {
+    sum = sum - y[j];
   }
 
   sum = sum * (MultFunc(y) + multKoef);
@@ -87,7 +89,7 @@ int RastriginIntProblem::SetDimension(int dimension)
     return IGlobalOptimizationProblem::OK;
   }
   else
-    return IGlobalOptimizationProblem::ERROR;
+    return -1;//IGlobalOptimizationProblem::ERROR;
 }
 
 int RastriginIntProblem::GetDimension() const
@@ -162,8 +164,16 @@ int RastriginIntProblem::Initialize()
   this->GetBounds(A, B);
 
   optPoint.resize(this->mDimension);
-  std::vector<std::string> u;
+  std::vector<std::string> u(this->mDimension);
+
+  mNumberOfValues.resize(GetNumberOfDiscreteVariable());
+  for (int i = 0; i < GetNumberOfDiscreteVariable(); i++)
+  {
+    mNumberOfValues[i] = mDefNumberOfValues;
+  }
+
   this->GetOptimumPoint(optPoint, u);
+
 
   int count = (int)pow(2.0, this->mDimension);
   for (int i = 0; i < count; i++)
@@ -180,11 +190,7 @@ int RastriginIntProblem::Initialize()
   multKoef += 4;
   optMultKoef = (MultFunc(optPoint) + multKoef);
 
-  mNumberOfValues.resize(GetNumberOfDiscreteVariable());
-  for (int i = 0; i < GetNumberOfDiscreteVariable(); i++)
-  {
-    mNumberOfValues[i] = mDefNumberOfValues;
-  }
+
 
   discreteValues.resize(mDefNumberOfValues);
   double d = (mRightBorder - mLeftBorder) / (mDefNumberOfValues - 1);
@@ -209,21 +215,22 @@ int RastriginIntProblem::SetNumberOfDiscreteVariable(int numberOfDiscreteVariabl
 }
 
 // ------------------------------------------------------------------------------------------------
-inline int RastriginIntProblem::GetDiscreteVariableValues(std::vector< std::vector<std::string>> values) const
+inline int RastriginIntProblem::GetDiscreteVariableValues(std::vector< std::vector<std::string>>& values) const
 {
   values.resize(GetNumberOfDiscreteVariable());
 
   for (int i = 0; i < GetNumberOfDiscreteVariable(); i++)
   {
+    values[i].resize(mNumberOfValues[i]);
     for (int j = 0; j < mNumberOfValues[i]; j++)
     {
-      values[i][j] = std::string('A' + j, 1);
+      values[i][j] = std::string(1, 'A' + j);
     }
   }
   return IGlobalOptimizationProblem::OK;
 }
 
- 
+
 
 // ------------------------------------------------------------------------------------------------
 LIB_EXPORT_API IGlobalOptimizationProblem* create()

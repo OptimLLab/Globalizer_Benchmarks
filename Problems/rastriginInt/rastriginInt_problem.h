@@ -90,7 +90,7 @@ public:
   /** Метод возвращает число целочисленных переменных
   \return Число целочисленных переменных
   */
-  virtual int GetDiscreteVariableValues(std::vector< std::vector<std::string>> values) const;
+  virtual int GetDiscreteVariableValues(std::vector< std::vector<std::string>>& values) const;
 
 };
 
