@@ -5,13 +5,13 @@
 #include <string>
 #include <cstdlib>
 
-#include "ProblemManager.h"
+#include "GlobalOptimizationProblemManager.h"
 #include "test_config.h"
 
 using namespace std;
 
 // ------------------------------------------------------------------------------------------------
-void SetProblem(string libName, string confName, char* dim, ProblemManager& manager, IProblem*& problem)
+void SetProblem(string libName, string confName, char* dim, GlobalOptimizationProblemManager& manager, IGlobalOptimizationProblem*& problem)
 {
   string lib = (string(TESTDATA_BIN_PATH) + "/" + libName + ".dll").c_str();
   int argc = 5;
@@ -43,7 +43,7 @@ void SetProblem(string libName, string confName, char* dim, ProblemManager& mana
 //TEST(Problem_gkls, test_gkls)
 //{
 //  //gkls.dll
-//  IProblem* problem = 0;
+//  IGlobalOptimizationProblem* problem = 0;
 //  string libName = "gkls";
 //  string confName = "gkls_conf";
 //  int Dimension = 2;
@@ -75,7 +75,7 @@ void SetProblem(string libName, string confName, char* dim, ProblemManager& mana
 //
 //  ASSERT_EQ(problem->GetDimension(), 2);
 //
-//  ASSERT_EQ(problem->GetAllOptimumPoint(y, size), IProblem::UNDEFINED);
+//  ASSERT_EQ(problem->GetAllOptimumPoint(y, size), IGlobalOptimizationProblem::PROBLEM_UNDEFINED);
 //
 //  ASSERT_NO_THROW(problem->GetBounds(lower, upper));
 //
@@ -91,9 +91,9 @@ void SetProblem(string libName, string confName, char* dim, ProblemManager& mana
 //
 //  ASSERT_EQ(problem->GetNumberOfFunctions(), 1);
 //
-//  ASSERT_EQ(problem->GetOptimumPoint(y), IProblem::OK);
+//  ASSERT_EQ(problem->GetOptimumPoint(y), IGlobalOptimizationProblem::PROBLEM_OK);
 //
-//  ASSERT_EQ(problem->GetOptimumValue(val), IProblem::OK);
+//  ASSERT_EQ(problem->GetOptimumValue(val), IGlobalOptimizationProblem::PROBLEM_OK);
 //
 //  EXPECT_DOUBLE_EQ(problem->CalculateFunctionals(y, 0), val);
 //}
@@ -102,7 +102,7 @@ void SetProblem(string libName, string confName, char* dim, ProblemManager& mana
 //TEST(Problem_rastrigin, test_rastrigin)
 //{
 //  //rastrigin.dll
-//  IProblem* problem = 0;
+//  IGlobalOptimizationProblem* problem = 0;
 //  string libName = "rastrigin";
 //  string confName = "";
 //  int Dimension = 2;
@@ -134,7 +134,7 @@ void SetProblem(string libName, string confName, char* dim, ProblemManager& mana
 //
 //  ASSERT_EQ(problem->GetDimension(), 2);
 //
-//  ASSERT_EQ(problem->GetAllOptimumPoint(y, size), IProblem::UNDEFINED);
+//  ASSERT_EQ(problem->GetAllOptimumPoint(y, size), IGlobalOptimizationProblem::PROBLEM_UNDEFINED);
 //
 //  ASSERT_NO_THROW(problem->GetBounds(lower, upper));
 //
@@ -150,9 +150,9 @@ void SetProblem(string libName, string confName, char* dim, ProblemManager& mana
 //
 //  ASSERT_EQ(problem->GetNumberOfFunctions(), 1);
 //
-//  ASSERT_EQ(problem->GetOptimumPoint(y), IProblem::OK);
+//  ASSERT_EQ(problem->GetOptimumPoint(y), IGlobalOptimizationProblem::PROBLEM_OK);
 //
-//  ASSERT_EQ(problem->GetOptimumValue(val), IProblem::OK);
+//  ASSERT_EQ(problem->GetOptimumValue(val), IGlobalOptimizationProblem::PROBLEM_OK);
 //
 //  EXPECT_DOUBLE_EQ(problem->CalculateFunctionals(y, 0), val);
 //}
@@ -161,7 +161,7 @@ void SetProblem(string libName, string confName, char* dim, ProblemManager& mana
 //TEST(Problem_gklsC, test_gklsC)
 //{
 //  //gklsC_conf.dll
-//  IProblem* problem = 0;
+//  IGlobalOptimizationProblem* problem = 0;
 //  string libName = "gklsC";
 //  string confName = "gklsC_conf";
 //  int Dimension = 2;
@@ -205,7 +205,7 @@ void SetProblem(string libName, string confName, char* dim, ProblemManager& mana
 //
 //  ASSERT_EQ(problem->GetDimension(), 2);
 //
-//  ASSERT_EQ(problem->GetAllOptimumPoint(y, size), IProblem::UNDEFINED);
+//  ASSERT_EQ(problem->GetAllOptimumPoint(y, size), IGlobalOptimizationProblem::PROBLEM_UNDEFINED);
 //
 //  ASSERT_NO_THROW(problem->GetBounds(lower, upper));
 //
@@ -221,13 +221,13 @@ void SetProblem(string libName, string confName, char* dim, ProblemManager& mana
 //
 //  ASSERT_EQ(problem->GetNumberOfFunctions(), NumberOfFunctions);
 //
-//  ASSERT_EQ(problem->GetOptimumPoint(y), IProblem::OK);
+//  ASSERT_EQ(problem->GetOptimumPoint(y), IGlobalOptimizationProblem::PROBLEM_OK);
 //
-//  ASSERT_EQ(problem->GetOptimumValue(val[0]), IProblem::OK);
+//  ASSERT_EQ(problem->GetOptimumValue(val[0]), IGlobalOptimizationProblem::PROBLEM_OK);
 //
 //  for (int i = 0; i < NumberOfFunctions; i++)
 //  {
-//    ASSERT_EQ(problem->GetOptimumValue(val2[i], i), IProblem::OK);
+//    ASSERT_EQ(problem->GetOptimumValue(val2[i], i), IGlobalOptimizationProblem::PROBLEM_OK);
 //    ASSERT_EQ(val[i], val2[i]);
 //  }
 //
@@ -245,7 +245,7 @@ void SetProblem(string libName, string confName, char* dim, ProblemManager& mana
 //TEST(Problem_grishagin, test_grishagin)
 //{
 //  //grishagin.dll
-//  IProblem* problem = 0;
+//  IGlobalOptimizationProblem* problem = 0;
 //  string libName = "grishagin";
 //  string confName = "grishagin_conf";
 //  int Dimension = 2;
@@ -277,7 +277,7 @@ void SetProblem(string libName, string confName, char* dim, ProblemManager& mana
 //
 //  ASSERT_EQ(problem->GetDimension(), 2);
 //
-//  ASSERT_EQ(problem->GetAllOptimumPoint(y, size), IProblem::UNDEFINED);
+//  ASSERT_EQ(problem->GetAllOptimumPoint(y, size), IGlobalOptimizationProblem::PROBLEM_UNDEFINED);
 //
 //  ASSERT_NO_THROW(problem->GetBounds(lower, upper));
 //
@@ -293,9 +293,9 @@ void SetProblem(string libName, string confName, char* dim, ProblemManager& mana
 //
 //  ASSERT_EQ(problem->GetNumberOfFunctions(), 1);
 //
-//  ASSERT_EQ(problem->GetOptimumPoint(y), IProblem::OK);
+//  ASSERT_EQ(problem->GetOptimumPoint(y), IGlobalOptimizationProblem::PROBLEM_OK);
 //
-//  ASSERT_EQ(problem->GetOptimumValue(val), IProblem::OK);
+//  ASSERT_EQ(problem->GetOptimumValue(val), IGlobalOptimizationProblem::PROBLEM_OK);
 //
 //  EXPECT_DOUBLE_EQ(problem->CalculateFunctionals(y, 0), val);
 //}

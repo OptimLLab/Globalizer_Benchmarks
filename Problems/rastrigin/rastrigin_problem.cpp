@@ -12,21 +12,15 @@ RastriginProblem::RastriginProblem()
 }
 
 // ------------------------------------------------------------------------------------------------
-int RastriginProblem::SetConfigPath(const std::string& configPath)
-{
-  return IProblem::OK;
-}
-
-// ------------------------------------------------------------------------------------------------
 int RastriginProblem::SetDimension(int dimension)
 {
   if(dimension > 0 && dimension <= mMaxDimension)
   {
     mDimension = dimension;
-    return IProblem::OK;
+    return IGlobalOptimizationProblem::PROBLEM_OK;
   }
   else
-    return IProblem::ERROR;
+    return IGlobalOptimizationProblem::PROBLEM_ERROR;
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -41,14 +35,14 @@ int RastriginProblem::Initialize()
   if (mDimension > 0)
   {
     mIsInitialized = true;
-    return IProblem::OK;
+    return IGlobalOptimizationProblem::PROBLEM_OK;
   }
   else
-    return IProblem::ERROR;
+    return IGlobalOptimizationProblem::PROBLEM_ERROR;
 }
 
 // ------------------------------------------------------------------------------------------------
-void RastriginProblem::GetBounds(double* lower, double *upper)
+void RastriginProblem::GetBounds(std::vector<double>& lower, std::vector<double>& upper)
 {
   if (mIsInitialized)
     for (int i = 0; i < mDimension; i++)
@@ -62,21 +56,21 @@ void RastriginProblem::GetBounds(double* lower, double *upper)
 int RastriginProblem::GetOptimumValue(double& value) const
 {
   if (!mIsInitialized)
-    return IProblem::UNDEFINED;
+    return IGlobalOptimizationProblem::PROBLEM_UNDEFINED;
 
   value = 0.0;
-  return IProblem::OK;
+  return IGlobalOptimizationProblem::PROBLEM_OK;
 }
 
 // ------------------------------------------------------------------------------------------------
-int RastriginProblem::GetOptimumPoint(double* point) const
+int RastriginProblem::GetOptimumPoint(std::vector<double>& point, std::vector<std::string>& u) const
 {
   if (!mIsInitialized)
-    return IProblem::UNDEFINED;
+    return IGlobalOptimizationProblem::PROBLEM_UNDEFINED;
 
   for (int i = 0; i < mDimension; i++)
     point[i] = 0.0;
-  return IProblem::OK;
+  return IGlobalOptimizationProblem::PROBLEM_OK;
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -98,7 +92,7 @@ int RastriginProblem::GetNumberOfCriterions() const
 }
 
 // ------------------------------------------------------------------------------------------------
-double RastriginProblem::CalculateFunctionals(const double* x, int fNumber)
+double RastriginProblem::CalculateFunctionals(const std::vector<double>& x, std::vector<std::string>& u, int fNumber)
 {
   double sum = 0.;
   for (int j = 0; j < mDimension; j++)
@@ -113,13 +107,13 @@ RastriginProblem::~RastriginProblem()
 }
 
 // ------------------------------------------------------------------------------------------------
-LIB_EXPORT_API IProblem* create()
+LIB_EXPORT_API IGlobalOptimizationProblem* create()
 {
   return new RastriginProblem();
 }
 
 // ------------------------------------------------------------------------------------------------
-LIB_EXPORT_API void destroy(IProblem* ptr)
+LIB_EXPORT_API void destroy(IGlobalOptimizationProblem* ptr)
 {
   delete ptr;
 }
@@ -139,8 +133,9 @@ LIB_EXPORT_API double Calculation(double x, double y)
   RastriginProblem rastr;
   rastr.SetDimension(2);
   rastr.Initialize();
-  double point[2] = { x, y };
-  result = rastr.CalculateFunctionals(point, 0);
+  std::vector<double> point = { x, y };
+  std::vector<std::string> u;
+  result = rastr.CalculateFunctionals(point, u, 0);
 
   //std::cout << "Calculation\n" << std::endl;
   return result;
@@ -154,8 +149,8 @@ LIB_EXPORT_API double GetUpperBounds()
   RastriginProblem rastr;
   rastr.SetDimension(2);
   rastr.Initialize();
-  double Upper[2] = { 0.0, 0.0 };
-  double Lower[2] = { 0.0, 0.0 };
+  std::vector<double> Upper = { 0.0, 0.0 };
+  std::vector<double> Lower = { 0.0, 0.0 };
   rastr.GetBounds(Lower, Upper);
 
   result = Upper[0];
@@ -171,8 +166,8 @@ LIB_EXPORT_API double GetLowerBounds()
   RastriginProblem rastr;
   rastr.SetDimension(2);
   rastr.Initialize();
-  double Upper[2] = { 0.0, 0.0 };
-  double Lower[2] = { 0.0, 0.0 };
+  std::vector<double> Upper = { 0.0, 0.0 };
+  std::vector<double> Lower = { 0.0, 0.0 };
   rastr.GetBounds(Lower, Upper);
 
   result = Lower[0];
