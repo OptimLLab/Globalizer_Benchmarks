@@ -44,15 +44,15 @@ class IGlobalOptimizationProblem
 public:
 
   /// Код ошибки, возвращаемый, если операция завершена успешно
-  static const int OK = 0;
+  static const int PROBLEM_OK = 0;
 
   /** Код ошибки, возвращаемый методами #GetOptimumValue и #GetOptimumPoint,
   если соответствующие параметры задачи не определены,
   */
-  static const int UNDEFINED = -1;
+  static const int PROBLEM_UNDEFINED = -1;
 
   /// Код ошибки, возвращаемый, если операция не выполнена
-  static const int ERROR = -2;
+  static const int PROBLEM_ERROR = -2;
 
   /// Код ошибки, возвращаемый, если попытались получить значения для недискретного параметра
   static const int ERROR_DISCRETE_VALUE = -201;
@@ -88,13 +88,13 @@ public:
 
   /** Метод возвращает значение целевой функции в точке глобального минимума
   \param[out] value оптимальное значение
-  \return Код ошибки (#OK или #UNDEFINED)
+  \return Код ошибки (#PROBLEM_OK или #UNDEFINED)
   */
   virtual int GetOptimumValue(double& value) const = 0;
 
   /** Метод возвращает координаты точки глобального минимума целевой функции
   \param[out] y точка, в которой достигается оптимальное значение
-  \return Код ошибки (#OK или #UNDEFINED)
+  \return Код ошибки (#PROBLEM_OK или #UNDEFINED)
   */
   virtual int GetOptimumPoint(std::vector<double>& y, std::vector<std::string>& u) const = 0;
 
@@ -122,7 +122,7 @@ public:
 
   /** Метод возвращает значение функции с номером index в точке глобального минимума
   \param[out] value оптимальное значение
-  \return Код ошибки (#OK или #UNDEFINED)
+  \return Код ошибки (#PROBLEM_OK или #UNDEFINED)
   */
   virtual int GetOptimumValue(double& value, int index) const;
 
@@ -131,7 +131,7 @@ public:
   \param[out] y непрерывные координаты точек, в которых достигается оптимальное значение
   \param[out] u целочисленные координаты точек, в которых достигается оптимальное значение
   \param[out] n количество точек, в которых достигается оптимальное значение
-  \return Код ошибки (#OK или #UNDEFINED)
+  \return Код ошибки (#PROBLEM_OK или #UNDEFINED)
   */
   virtual int GetAllOptimumPoint(std::vector<std::vector<double>>& y, std::vector<std::vector<std::string>>& u, int& n) const;
 
@@ -178,28 +178,28 @@ public:
   /** Метод задает параметры задачи
   \param[in] name имя параметра
   \param[in] value значение параметра
-  \return Код ошибки (#OK или #UNDEFINED)
+  \return Код ошибки (#PROBLEM_OK или #UNDEFINED)
   */
   virtual int SetParameter(std::string name, std::string value);
 
   /** Метод задает параметры задачи
   \param[in] name имя параметра
   \param[in] value значение параметра
-  \return Код ошибки (#OK или #UNDEFINED)
+  \return Код ошибки (#PROBLEM_OK или #UNDEFINED)
   */
   //virtual int SetParameter(std::string name, std::any value);
 
   /** Метод задает параметры задачи
   \param[in] name имя параметра
   \param[in] value значение параметра
-  \return Код ошибки (#OK или #UNDEFINED)
+  \return Код ошибки (#PROBLEM_OK или #UNDEFINED)
   */
   virtual int SetParameter(std::string name, void* value);
 
   /** Метод возвращает параметры задачи
   \param[out] names имена параметраметров 
   \param[out] values значениея параметров
-  \return Код ошибки (#OK или #UNDEFINED)
+  \return Код ошибки (#PROBLEM_OK или #UNDEFINED)
   */
   virtual void GetParameters(std::vector<std::string>& names, std::vector<std::string>& values);
 
@@ -210,19 +210,19 @@ public:
 // ------------------------------------------------------------------------------------------------
 inline int IGlobalOptimizationProblem::SetConfigPath(const std::string& configPath)
 {
-  return IGlobalOptimizationProblem::UNDEFINED;
+  return IGlobalOptimizationProblem::PROBLEM_UNDEFINED;
 }
 
 // ------------------------------------------------------------------------------------------------
 inline int IGlobalOptimizationProblem::GetOptimumValue(double& value, int index) const
 {
-  return IGlobalOptimizationProblem::UNDEFINED;
+  return IGlobalOptimizationProblem::PROBLEM_UNDEFINED;
 }
 
 // ------------------------------------------------------------------------------------------------
 inline int IGlobalOptimizationProblem::GetAllOptimumPoint(std::vector<std::vector<double>>& y, std::vector<std::vector<std::string>>& u, int& n) const
 {
-  return IGlobalOptimizationProblem::UNDEFINED;
+  return IGlobalOptimizationProblem::PROBLEM_UNDEFINED;
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -263,31 +263,31 @@ inline int IGlobalOptimizationProblem::GetNumberOfContinuousVariable() const
 // ------------------------------------------------------------------------------------------------
 inline int IGlobalOptimizationProblem::SetNumberOfDiscreteVariable(int numberOfDiscreteVariable)
 {
-  return IGlobalOptimizationProblem::UNDEFINED;
+  return IGlobalOptimizationProblem::PROBLEM_UNDEFINED;
 }
 
 // ------------------------------------------------------------------------------------------------
 inline int IGlobalOptimizationProblem::GetDiscreteVariableValues(std::vector< std::vector<std::string>>& values) const
 {
-  return IGlobalOptimizationProblem::UNDEFINED;
+  return IGlobalOptimizationProblem::PROBLEM_UNDEFINED;
 }
 
 // ------------------------------------------------------------------------------------------------
 inline int IGlobalOptimizationProblem::SetParameter(std::string name, std::string value)
 {
-  return IGlobalOptimizationProblem::UNDEFINED;
+  return IGlobalOptimizationProblem::PROBLEM_UNDEFINED;
 }
 
 // ------------------------------------------------------------------------------------------------
 //inline int IGlobalOptimizationProblem::SetParameter(std::string name, std::any value)
 //{
-//  return IGlobalOptimizationProblem::UNDEFINED;
+//  return IGlobalOptimizationProblem::PROBLEM_UNDEFINED;
 //}
 
 // ------------------------------------------------------------------------------------------------
 inline int IGlobalOptimizationProblem::SetParameter(std::string name, void* value)
 {
-  return IGlobalOptimizationProblem::UNDEFINED;
+  return IGlobalOptimizationProblem::PROBLEM_UNDEFINED;
 }
 
 // ------------------------------------------------------------------------------------------------

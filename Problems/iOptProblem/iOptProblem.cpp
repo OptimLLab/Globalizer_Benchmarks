@@ -22,13 +22,13 @@ iOptProblem::iOptProblem()
 int iOptProblem::SetConfigPath(const std::string& configPath)
 {
   mPyFilePath = std::string(configPath);
-  return IGlobalOptimizationProblem::OK;
+  return IGlobalOptimizationProblem::PROBLEM_OK;
 }
 
 // ------------------------------------------------------------------------------------------------
 int iOptProblem::SetDimension(int dimension)
 {
-    return IGlobalOptimizationProblem::OK;
+    return IGlobalOptimizationProblem::PROBLEM_OK;
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -49,10 +49,10 @@ int iOptProblem::Initialize()
     mDimension = mFunction->GetDimension();
 
     mIsInitialized = true;
-    return IGlobalOptimizationProblem::OK;
+    return IGlobalOptimizationProblem::PROBLEM_OK;
   }
   else
-    return IGlobalOptimizationProblem::ERROR;
+    return IGlobalOptimizationProblem::PROBLEM_ERROR;
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -67,13 +67,13 @@ void iOptProblem::GetBounds(std::vector<double>& lower, std::vector<double>& upp
 // ------------------------------------------------------------------------------------------------
 int iOptProblem::GetOptimumValue(double& value) const
 {
-  return IGlobalOptimizationProblem::UNDEFINED;
+  return IGlobalOptimizationProblem::PROBLEM_UNDEFINED;
 }
 
 // ------------------------------------------------------------------------------------------------
 int iOptProblem::GetOptimumPoint(std::vector<double>& x, std::vector<std::string>& u) const
 {
-  return IGlobalOptimizationProblem::UNDEFINED;
+  return IGlobalOptimizationProblem::PROBLEM_UNDEFINED;
 }
 
 // ------------------------------------------------------------------------------------------------

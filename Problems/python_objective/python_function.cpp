@@ -17,13 +17,13 @@ TPythonProblem::TPythonProblem()
 int TPythonProblem::SetConfigPath(const std::string& configPath)
 {
   mPyFilePath = std::string(configPath);
-  return IGlobalOptimizationProblem::OK;
+  return IGlobalOptimizationProblem::PROBLEM_OK;
 }
 
 // ------------------------------------------------------------------------------------------------
 int TPythonProblem::SetDimension(int dimension)
 {
-    return IGlobalOptimizationProblem::OK;
+    return IGlobalOptimizationProblem::PROBLEM_OK;
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -44,10 +44,10 @@ int TPythonProblem::Initialize()
     mDimension = mFunction->GetDimension();
 
     mIsInitialized = true;
-    return IGlobalOptimizationProblem::OK;
+    return IGlobalOptimizationProblem::PROBLEM_OK;
   }
   else
-    return IGlobalOptimizationProblem::ERROR;
+    return IGlobalOptimizationProblem::PROBLEM_ERROR;
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -62,13 +62,13 @@ void TPythonProblem::GetBounds(std::vector<double>& lower, std::vector<double>& 
 // ------------------------------------------------------------------------------------------------
 int TPythonProblem::GetOptimumValue(double& value) const
 {
-  return IGlobalOptimizationProblem::UNDEFINED;
+  return IGlobalOptimizationProblem::PROBLEM_UNDEFINED;
 }
 
 // ------------------------------------------------------------------------------------------------
 int TPythonProblem::GetOptimumPoint(std::vector<double>& x, std::vector<std::string>& u) const
 {
-  return IGlobalOptimizationProblem::UNDEFINED;
+  return IGlobalOptimizationProblem::PROBLEM_UNDEFINED;
 }
 
 // ------------------------------------------------------------------------------------------------

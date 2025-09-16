@@ -17,10 +17,10 @@ int RastriginProblem::SetDimension(int dimension)
   if(dimension > 0 && dimension <= mMaxDimension)
   {
     mDimension = dimension;
-    return IGlobalOptimizationProblem::OK;
+    return IGlobalOptimizationProblem::PROBLEM_OK;
   }
   else
-    return IGlobalOptimizationProblem::ERROR;
+    return IGlobalOptimizationProblem::PROBLEM_ERROR;
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -35,10 +35,10 @@ int RastriginProblem::Initialize()
   if (mDimension > 0)
   {
     mIsInitialized = true;
-    return IGlobalOptimizationProblem::OK;
+    return IGlobalOptimizationProblem::PROBLEM_OK;
   }
   else
-    return IGlobalOptimizationProblem::ERROR;
+    return IGlobalOptimizationProblem::PROBLEM_ERROR;
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -56,21 +56,21 @@ void RastriginProblem::GetBounds(std::vector<double>& lower, std::vector<double>
 int RastriginProblem::GetOptimumValue(double& value) const
 {
   if (!mIsInitialized)
-    return IGlobalOptimizationProblem::UNDEFINED;
+    return IGlobalOptimizationProblem::PROBLEM_UNDEFINED;
 
   value = 0.0;
-  return IGlobalOptimizationProblem::OK;
+  return IGlobalOptimizationProblem::PROBLEM_OK;
 }
 
 // ------------------------------------------------------------------------------------------------
 int RastriginProblem::GetOptimumPoint(std::vector<double>& point, std::vector<std::string>& u) const
 {
   if (!mIsInitialized)
-    return IGlobalOptimizationProblem::UNDEFINED;
+    return IGlobalOptimizationProblem::PROBLEM_UNDEFINED;
 
   for (int i = 0; i < mDimension; i++)
     point[i] = 0.0;
-  return IGlobalOptimizationProblem::OK;
+  return IGlobalOptimizationProblem::PROBLEM_OK;
 }
 
 // ------------------------------------------------------------------------------------------------

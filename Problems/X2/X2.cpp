@@ -48,10 +48,10 @@ int X2Problem::SetDimension(int dimension)
   if (dimension > 0 && dimension <= mMaxDimension)
   {
     mDimension = dimension;
-    return IGlobalOptimizationProblem::OK;
+    return IGlobalOptimizationProblem::PROBLEM_OK;
   }
   else
-    return IGlobalOptimizationProblem::ERROR;
+    return IGlobalOptimizationProblem::PROBLEM_ERROR;
 }
 
 int X2Problem::GetDimension() const
@@ -64,10 +64,10 @@ int X2Problem::Initialize()
   if (mDimension > 0)
   {
     mIsInitialized = true;
-    return IGlobalOptimizationProblem::OK;
+    return IGlobalOptimizationProblem::PROBLEM_OK;
   }
   else
-    return IGlobalOptimizationProblem::ERROR;
+    return IGlobalOptimizationProblem::PROBLEM_ERROR;
 }
 
 
@@ -85,7 +85,7 @@ void X2Problem::GetBounds(std::vector<double>& lower, std::vector<double>& upper
 int X2Problem::GetOptimumValue(double& value) const
 {
   //if (!mIsInitialized)
-  //  return IGlobalOptimizationProblem::UNDEFINED;
+  //  return IGlobalOptimizationProblem::PROBLEM_UNDEFINED;
   value = 0.0;
   int fn = function_number;
   for (int j = 0; j < mDimension; j++)
@@ -98,14 +98,14 @@ int X2Problem::GetOptimumValue(double& value) const
       else
         value += X_magic[(fn - 1) * mDimension * 2 + j * 2 + 0] * mRightBorder;
 
-  return IGlobalOptimizationProblem::OK;
+  return IGlobalOptimizationProblem::PROBLEM_OK;
 }
 
 // ------------------------------------------------------------------------------------------------
 int X2Problem::GetOptimumPoint(std::vector<double>& point, std::vector<std::string>& u) const
 {
   //if (!mIsInitialized)
-  //  return IGlobalOptimizationProblem::UNDEFINED;
+  //  return IGlobalOptimizationProblem::PROBLEM_UNDEFINED;
   double min_ = 0.0;
 
   for (int i = 0; i < mDimension; i++) {
@@ -130,7 +130,7 @@ int X2Problem::GetOptimumPoint(std::vector<double>& point, std::vector<std::stri
         point[i] = min_;
     }
   }
-  return IGlobalOptimizationProblem::OK;
+  return IGlobalOptimizationProblem::PROBLEM_OK;
 }
 
 int X2Problem::GetNumberOfFunctions() const

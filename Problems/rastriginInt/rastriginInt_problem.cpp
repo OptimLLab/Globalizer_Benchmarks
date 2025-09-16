@@ -27,7 +27,7 @@ RastriginIntProblem::RastriginIntProblem()
 int RastriginIntProblem::GetOptimumValue(double& value) const
 {
   if (!this->mIsInitialized)
-    return IGlobalOptimizationProblem::UNDEFINED;
+    return IGlobalOptimizationProblem::PROBLEM_UNDEFINED;
 
   value = -mRightBorder;
 
@@ -36,14 +36,14 @@ int RastriginIntProblem::GetOptimumValue(double& value) const
     value = value * optMultKoef;
   }
 
-  return IGlobalOptimizationProblem::OK;
+  return IGlobalOptimizationProblem::PROBLEM_OK;
 }
 
 // ------------------------------------------------------------------------------------------------
 int RastriginIntProblem::GetOptimumPoint(std::vector<double>& point, std::vector<std::string>& u) const
 {
   if (!this->mIsInitialized)
-    return IGlobalOptimizationProblem::UNDEFINED;
+    return IGlobalOptimizationProblem::PROBLEM_UNDEFINED;
 
   for (int i = 0; i < countContinuousVariables; i++)
     point[i] = 0.0;
@@ -54,7 +54,7 @@ int RastriginIntProblem::GetOptimumPoint(std::vector<double>& point, std::vector
 
   for (int i = 0; i < ndv; i++)
     u[i] = values[i][values[i].size() - 1];
-  return IGlobalOptimizationProblem::OK;
+  return IGlobalOptimizationProblem::PROBLEM_OK;
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -86,10 +86,10 @@ int RastriginIntProblem::SetDimension(int dimension)
   {
     mDimension = dimension;
     Initialize();
-    return IGlobalOptimizationProblem::OK;
+    return IGlobalOptimizationProblem::PROBLEM_OK;
   }
   else
-    return -1;//IGlobalOptimizationProblem::ERROR;
+    return -1;//IGlobalOptimizationProblem::PROBLEM_ERROR;
 }
 
 int RastriginIntProblem::GetDimension() const
@@ -199,7 +199,7 @@ int RastriginIntProblem::Initialize()
     discreteValues[i] = mLeftBorder + d * i;
   }
 
-  return IGlobalOptimizationProblem::OK;
+  return IGlobalOptimizationProblem::PROBLEM_OK;
 }
 
 int RastriginIntProblem::GetNumberOfDiscreteVariable() const
@@ -227,7 +227,7 @@ inline int RastriginIntProblem::GetDiscreteVariableValues(std::vector< std::vect
       values[i][j] = std::string(1, 'A' + j);
     }
   }
-  return IGlobalOptimizationProblem::OK;
+  return IGlobalOptimizationProblem::PROBLEM_OK;
 }
 
 

@@ -75,7 +75,7 @@ void SetProblem(string libName, string confName, char* dim, GlobalOptimizationPr
 //
 //  ASSERT_EQ(problem->GetDimension(), 2);
 //
-//  ASSERT_EQ(problem->GetAllOptimumPoint(y, size), IGlobalOptimizationProblem::UNDEFINED);
+//  ASSERT_EQ(problem->GetAllOptimumPoint(y, size), IGlobalOptimizationProblem::PROBLEM_UNDEFINED);
 //
 //  ASSERT_NO_THROW(problem->GetBounds(lower, upper));
 //
@@ -91,9 +91,9 @@ void SetProblem(string libName, string confName, char* dim, GlobalOptimizationPr
 //
 //  ASSERT_EQ(problem->GetNumberOfFunctions(), 1);
 //
-//  ASSERT_EQ(problem->GetOptimumPoint(y), IGlobalOptimizationProblem::OK);
+//  ASSERT_EQ(problem->GetOptimumPoint(y), IGlobalOptimizationProblem::PROBLEM_OK);
 //
-//  ASSERT_EQ(problem->GetOptimumValue(val), IGlobalOptimizationProblem::OK);
+//  ASSERT_EQ(problem->GetOptimumValue(val), IGlobalOptimizationProblem::PROBLEM_OK);
 //
 //  EXPECT_DOUBLE_EQ(problem->CalculateFunctionals(y, 0), val);
 //}
@@ -134,7 +134,7 @@ void SetProblem(string libName, string confName, char* dim, GlobalOptimizationPr
 //
 //  ASSERT_EQ(problem->GetDimension(), 2);
 //
-//  ASSERT_EQ(problem->GetAllOptimumPoint(y, size), IGlobalOptimizationProblem::UNDEFINED);
+//  ASSERT_EQ(problem->GetAllOptimumPoint(y, size), IGlobalOptimizationProblem::PROBLEM_UNDEFINED);
 //
 //  ASSERT_NO_THROW(problem->GetBounds(lower, upper));
 //
@@ -150,9 +150,9 @@ void SetProblem(string libName, string confName, char* dim, GlobalOptimizationPr
 //
 //  ASSERT_EQ(problem->GetNumberOfFunctions(), 1);
 //
-//  ASSERT_EQ(problem->GetOptimumPoint(y), IGlobalOptimizationProblem::OK);
+//  ASSERT_EQ(problem->GetOptimumPoint(y), IGlobalOptimizationProblem::PROBLEM_OK);
 //
-//  ASSERT_EQ(problem->GetOptimumValue(val), IGlobalOptimizationProblem::OK);
+//  ASSERT_EQ(problem->GetOptimumValue(val), IGlobalOptimizationProblem::PROBLEM_OK);
 //
 //  EXPECT_DOUBLE_EQ(problem->CalculateFunctionals(y, 0), val);
 //}
@@ -205,7 +205,7 @@ void SetProblem(string libName, string confName, char* dim, GlobalOptimizationPr
 //
 //  ASSERT_EQ(problem->GetDimension(), 2);
 //
-//  ASSERT_EQ(problem->GetAllOptimumPoint(y, size), IGlobalOptimizationProblem::UNDEFINED);
+//  ASSERT_EQ(problem->GetAllOptimumPoint(y, size), IGlobalOptimizationProblem::PROBLEM_UNDEFINED);
 //
 //  ASSERT_NO_THROW(problem->GetBounds(lower, upper));
 //
@@ -221,13 +221,13 @@ void SetProblem(string libName, string confName, char* dim, GlobalOptimizationPr
 //
 //  ASSERT_EQ(problem->GetNumberOfFunctions(), NumberOfFunctions);
 //
-//  ASSERT_EQ(problem->GetOptimumPoint(y), IGlobalOptimizationProblem::OK);
+//  ASSERT_EQ(problem->GetOptimumPoint(y), IGlobalOptimizationProblem::PROBLEM_OK);
 //
-//  ASSERT_EQ(problem->GetOptimumValue(val[0]), IGlobalOptimizationProblem::OK);
+//  ASSERT_EQ(problem->GetOptimumValue(val[0]), IGlobalOptimizationProblem::PROBLEM_OK);
 //
 //  for (int i = 0; i < NumberOfFunctions; i++)
 //  {
-//    ASSERT_EQ(problem->GetOptimumValue(val2[i], i), IGlobalOptimizationProblem::OK);
+//    ASSERT_EQ(problem->GetOptimumValue(val2[i], i), IGlobalOptimizationProblem::PROBLEM_OK);
 //    ASSERT_EQ(val[i], val2[i]);
 //  }
 //
@@ -277,7 +277,7 @@ void SetProblem(string libName, string confName, char* dim, GlobalOptimizationPr
 //
 //  ASSERT_EQ(problem->GetDimension(), 2);
 //
-//  ASSERT_EQ(problem->GetAllOptimumPoint(y, size), IGlobalOptimizationProblem::UNDEFINED);
+//  ASSERT_EQ(problem->GetAllOptimumPoint(y, size), IGlobalOptimizationProblem::PROBLEM_UNDEFINED);
 //
 //  ASSERT_NO_THROW(problem->GetBounds(lower, upper));
 //
@@ -293,9 +293,9 @@ void SetProblem(string libName, string confName, char* dim, GlobalOptimizationPr
 //
 //  ASSERT_EQ(problem->GetNumberOfFunctions(), 1);
 //
-//  ASSERT_EQ(problem->GetOptimumPoint(y), IGlobalOptimizationProblem::OK);
+//  ASSERT_EQ(problem->GetOptimumPoint(y), IGlobalOptimizationProblem::PROBLEM_OK);
 //
-//  ASSERT_EQ(problem->GetOptimumValue(val), IGlobalOptimizationProblem::OK);
+//  ASSERT_EQ(problem->GetOptimumValue(val), IGlobalOptimizationProblem::PROBLEM_OK);
 //
 //  EXPECT_DOUBLE_EQ(problem->CalculateFunctionals(y, 0), val);
 //}
