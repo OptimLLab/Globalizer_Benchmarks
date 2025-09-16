@@ -187,7 +187,7 @@ public:
   \param[in] value значение параметра
   \return Код ошибки (#OK или #UNDEFINED)
   */
-  virtual int SetParameter(std::string name, std::any value);
+  //virtual int SetParameter(std::string name, std::any value);
 
   /** Метод задает параметры задачи
   \param[in] name имя параметра
@@ -279,10 +279,10 @@ inline int IGlobalOptimizationProblem::SetParameter(std::string name, std::strin
 }
 
 // ------------------------------------------------------------------------------------------------
-inline int IGlobalOptimizationProblem::SetParameter(std::string name, std::any value)
-{
-  return IGlobalOptimizationProblem::UNDEFINED;
-}
+//inline int IGlobalOptimizationProblem::SetParameter(std::string name, std::any value)
+//{
+//  return IGlobalOptimizationProblem::UNDEFINED;
+//}
 
 // ------------------------------------------------------------------------------------------------
 inline int IGlobalOptimizationProblem::SetParameter(std::string name, void* value)
