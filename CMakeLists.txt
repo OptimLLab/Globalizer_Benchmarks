@@ -82,7 +82,7 @@ if(NOT (CMAKE_BUILD_TYPE IN_LIST CMAKE_CONFIGURATION_TYPES))
 endif()
 
 
-init_doxygen()
+#init_doxygen()
 
 
 # set include directories for project
