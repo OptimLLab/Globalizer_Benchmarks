@@ -198,3 +198,121 @@ void TPythonModuleWrapper::GetBounds(std::vector<double>& lower, std::vector<dou
     upper[i] = mUpperBound[i];
   }
 }
+
+// ------------------------------------------------------------------------------------------------
+int TPythonModuleWrapper::GetNumberOfFunctions() const
+{
+  try
+  {
+    PyObject* pNumberOfFunctions = PyObject_CallMethod(pInstance, "get_number_of_functions", NULL);
+    if (pNumberOfFunctions)
+    {
+      int numberOfFunctions = PyLong_AsLong(pNumberOfFunctions);
+
+      Py_DECREF(pNumberOfFunctions);
+      return numberOfFunctions;
+    }
+    else
+    {
+      PyErr_Print();
+      return 1;
+    }
+    
+  }
+  catch (...)
+  {
+    return 1;
+  }
+}
+
+// ------------------------------------------------------------------------------------------------
+int TPythonModuleWrapper::GetNumberOfConstraints() const
+{
+  try
+  {
+    PyObject* pNumberOfConstraints = PyObject_CallMethod(pInstance, "get_number_of_constraints", NULL);
+    if (pNumberOfConstraints)
+    {
+      int numberOfConstraints = PyLong_AsLong(pNumberOfConstraints);
+
+      Py_DECREF(pNumberOfConstraints);
+      return numberOfConstraints;
+    }
+    else
+    {
+      PyErr_Print();
+      return 1;
+    }
+
+  }
+  catch (...)
+  {
+    return 1;
+  }
+}
+
+// ------------------------------------------------------------------------------------------------
+int TPythonModuleWrapper::GetNumberOfCriterions() const
+{
+  try
+  {
+    PyObject* pNumberOfCriterions = PyObject_CallMethod(pInstance, "get_number_of_criterions", NULL);
+    if (pNumberOfCriterions)
+    {
+      int numberOfCriterions = PyLong_AsLong(pNumberOfCriterions);
+
+      Py_DECREF(pNumberOfCriterions);
+      return numberOfCriterions;
+    }
+    else
+    {
+      PyErr_Print();
+      return 1;
+    }
+
+  }
+  catch (...)
+  {
+    return 1;
+  }
+}
+
+// ------------------------------------------------------------------------------------------------
+inline int TPythonModuleWrapper::GetStartTrial(std::vector<double>& y, std::vector<std::string>& u, std::vector<double>& values)
+{
+  try
+  {
+
+    PyObject* pStartY = PyObject_CallMethod(pInstance, "get_start_y", NULL);
+    if (pStartY)
+    {
+      y = py_list_to_vector_double(pStartY);
+
+      Py_DECREF(pStartY);
+    }
+    else
+    {
+      PyErr_Print();
+      return -1;
+    }
+
+    PyObject* pValues = PyObject_CallMethod(pInstance, "get_start_y", NULL);
+    if (pValues)
+    {
+      values = py_list_to_vector_double(pValues);
+
+      Py_DECREF(pValues);
+    }
+    else
+    {
+      PyErr_Print();
+      return -1;
+    }
+
+  }
+  catch (...)
+  {
+    return -1;
+  }
+  return 0;
+}

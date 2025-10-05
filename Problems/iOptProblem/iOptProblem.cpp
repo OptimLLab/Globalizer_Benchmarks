@@ -79,19 +79,36 @@ int iOptProblem::GetOptimumPoint(std::vector<double>& x, std::vector<std::string
 // ------------------------------------------------------------------------------------------------
 int iOptProblem::GetNumberOfFunctions() const
 {
-  return 1;
+  if (mIsInitialized)
+  {
+    return mFunction->GetNumberOfFunctions();
+  }
 }
 
 // ------------------------------------------------------------------------------------------------
 int iOptProblem::GetNumberOfConstraints() const
 {
-  return 0;
+  if (mIsInitialized)
+  {
+    return mFunction->GetNumberOfConstraints();
+  }
 }
 
 // ------------------------------------------------------------------------------------------------
 int iOptProblem::GetNumberOfCriterions() const
 {
-  return 1;
+  if (mIsInitialized)
+  {
+    return mFunction->GetNumberOfCriterions();
+  }
+}
+
+inline int iOptProblem::GetStartTrial(std::vector<double>& y, std::vector<std::string>& u, std::vector<double>& values)
+{
+  if (mIsInitialized)
+  {
+    return mFunction->GetStartTrial(y, u, values);
+  }
 }
 
 // ------------------------------------------------------------------------------------------------

@@ -39,6 +39,21 @@ class GlobalizerProblem:
     def get_dimension(self) -> int:
         return self.dimension
 
+    def get_number_of_functions(self) -> int:
+        return self.get_number_of_criterions() + self.get_number_of_constraints()
+
+    def get_number_of_constraints(self) -> int:
+        return 0
+
+    def get_number_of_criterions(self) -> int:
+        return 1
+
+    def get_start_y(self) -> List[float]:
+        return [0.5] * self.dimension
+
+    def get_start_value(self) -> List[float]:
+        return [self.calculate(self.get_start_y(), 0)]
+
     def get_lower_bounds(self) -> List[float]:
         res = self.problem.lower_bound_of_float_variables.tolist()
         return res

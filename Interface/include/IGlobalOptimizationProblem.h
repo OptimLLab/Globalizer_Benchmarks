@@ -135,6 +135,14 @@ public:
   */
   virtual int GetAllOptimumPoint(std::vector<std::vector<double>>& y, std::vector<std::vector<std::string>>& u, int& n) const;
 
+  /** Метод возвращает точку из допустимой области
+  \param[out] y непрерывные координаты точки
+  \param[out] u целочисленые координаты точки
+  \param[out] values значение в этой точке
+  \return Код ошибки (#PROBLEM_OK или #UNDEFINED)
+  */
+  virtual int GetStartTrial(std::vector<double>& y, std::vector<std::string>& u, std::vector<double>& values);
+
   /** Метод, вычисляющий функции задачи в нескольких точках одновременно
   \param[in] y массив, содержащий последовательно записанные непрерывные координаты точки, в которых необходимо
   вычислить функционалы задачи
@@ -203,6 +211,8 @@ public:
   */
   virtual void GetParameters(std::vector<std::string>& names, std::vector<std::string>& values);
 
+
+
   ///Деструктор
   virtual ~IGlobalOptimizationProblem();
 };
@@ -221,6 +231,11 @@ inline int IGlobalOptimizationProblem::GetOptimumValue(double& value, int index)
 
 // ------------------------------------------------------------------------------------------------
 inline int IGlobalOptimizationProblem::GetAllOptimumPoint(std::vector<std::vector<double>>& y, std::vector<std::vector<std::string>>& u, int& n) const
+{
+  return IGlobalOptimizationProblem::PROBLEM_UNDEFINED;
+}
+
+inline int IGlobalOptimizationProblem::GetStartTrial(std::vector<double>& y, std::vector<std::string>& u, std::vector<double>& values)
 {
   return IGlobalOptimizationProblem::PROBLEM_UNDEFINED;
 }

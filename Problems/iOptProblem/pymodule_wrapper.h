@@ -40,5 +40,17 @@ public:
   void GetBounds(std::vector<double>& lower, std::vector<double>& upper) const;
   double EvaluateFunction(const std::vector<double>& y) const;
   std::vector<double> EvaluateAllFunction(const std::vector<double>& y) const;
+  virtual int GetNumberOfFunctions() const;
+  virtual int GetNumberOfConstraints() const;
+  virtual int GetNumberOfCriterions() const;
+
+
+  /** ћетод возвращает точку из допустимой области
+\param[out] y непрерывные координаты точки
+\param[out] u целочисленые координаты точки
+\param[out] values значение в этой точке
+\return  од ошибки (#PROBLEM_OK или #UNDEFINED)
+*/
+  virtual int GetStartTrial(std::vector<double>& y, std::vector<std::string>& u, std::vector<double>& values);
   ~TPythonModuleWrapper();
 };
