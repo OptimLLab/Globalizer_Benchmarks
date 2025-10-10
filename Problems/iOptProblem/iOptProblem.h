@@ -1,5 +1,5 @@
 #ifndef __IOPT_PROBLEM_H__
-#define __PYTHONPROBLEM_H__
+#define __IOPT_PROBLEM_H__
 
 #include <memory>
 
@@ -10,9 +10,14 @@ class iOptProblem : public IGlobalOptimizationProblem
 {
 protected:
 
+
   int mDimension;
-  bool mIsInitialized;
   std::string mPyFilePath;
+  std::string functionScriptName;
+  std::string functionClassName;
+
+  bool mIsInitialized;
+
   std::shared_ptr<TPythonModuleWrapper> mFunction;
   void* mLibpython_handle;
 
@@ -42,13 +47,41 @@ public:
 */
   virtual std::vector<double> CalculateAllFunctionals(const std::vector<double>& y, std::vector<std::string>& u);
 
-  /** Метод возвращает точку из допустимой области
+  /** ћетод возвращает точку из допустимой области
   \param[out] y непрерывные координаты точки
   \param[out] u целочисленые координаты точки
   \param[out] values значение в этой точке
-  \return Код ошибки (#PROBLEM_OK или #UNDEFINED)
+  \return  од ошибки (#PROBLEM_OK или #UNDEFINED)
   */
   virtual int GetStartTrial(std::vector<double>& y, std::vector<std::string>& u, std::vector<double>& values);
+
+  /** Метод задает параметры задачи
+\param[in] name имя параметра
+\param[in] value значение параметра
+\return Код ошибки (#PROBLEM_OK или #UNDEFINED)
+*/
+  virtual int SetParameter(std::string name, std::string value);
+
+  /** Метод задает параметры задачи
+  \param[in] name имя параметра
+  \param[in] value значение параметра
+  \return Код ошибки (#PROBLEM_OK или #UNDEFINED)
+  */
+  //virtual int SetParameter(std::string name, std::any value);
+
+  /** Метод задает параметры задачи
+  \param[in] name имя параметра
+  \param[in] value значение параметра
+  \return Код ошибки (#PROBLEM_OK или #UNDEFINED)
+  */
+  virtual int SetParameter(std::string name, void* value);
+
+  /** Метод возвращает параметры задачи
+  \param[out] names имена параметраметров
+  \param[out] values значениея параметров
+  \return Код ошибки (#PROBLEM_OK или #UNDEFINED)
+  */
+  virtual void GetParameters(std::vector<std::string>& names, std::vector<std::string>& values);
 
   ~iOptProblem();
 };
