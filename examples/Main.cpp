@@ -116,6 +116,20 @@ int main(int argc, char* argv[])
     double value = iOptproble->CalculateFunctionals(y, u, 0);
   }
 
+  IGlobalOptimizationProblem* problemStronginC3 = 0;
+  if (InitGlobalOptimizationProblem(manager, problemStronginC3, "stronginC3.dll"))
+  {
+    std::cout << "Error during problem initialization\n";
+    return 0;
+  }
+  else
+  {
+    problemStronginC3->SetDimension(2);
+    std::vector<double> y = { 0.5, 0.5 };
+    std::vector <std::string> u;
+    double value = problemStronginC3->CalculateFunctionals(y, u, 0);
+  }
+
 
   return 0;
 }
