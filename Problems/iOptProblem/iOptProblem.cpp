@@ -171,14 +171,14 @@ inline void iOptProblem::GetParameters(std::vector<std::string>& names, std::vec
   names[0] = "Dimension";
   values[0] = std::to_string(mDimension);
 
-  names[0] = "mPyFilePath";
-  values[0] = mPyFilePath;
+  names[1] = "mPyFilePath";
+  values[1] = mPyFilePath;
 
-  names[0] = "functionScriptName";
-  values[0] = functionScriptName;
+  names[2] = "functionScriptName";
+  values[2] = functionScriptName;
 
-  names[0] = "functionClassName";
-  values[0] = functionClassName;
+  names[3] = "functionClassName";
+  values[3] = functionClassName;
 
 }
 
