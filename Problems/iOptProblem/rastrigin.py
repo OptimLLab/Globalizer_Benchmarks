@@ -31,10 +31,12 @@ class Rastrigin(Problem):
         for i in range(self.dimension):
             self.float_variable_names[i] = i
 
-        self.lower_bound_of_float_variables = np.ndarray(shape=(self.dimension), dtype=np.double)
-        self.lower_bound_of_float_variables.fill(-2.2)
-        self.upper_bound_of_float_variables = np.ndarray(shape=(self.dimension), dtype=np.double)
-        self.upper_bound_of_float_variables.fill(1.8)
+        self.lower_bound_of_float_variables = [-2.2] * self.dimension
+        self.upper_bound_of_float_variables = [1.8] * self.dimension
+        #self.lower_bound_of_float_variables = np.ndarray(shape=(self.dimension), dtype=np.double)
+        #self.lower_bound_of_float_variables.fill(-2.2)
+        #self.upper_bound_of_float_variables = np.ndarray(shape=(self.dimension), dtype=np.double)
+        #self.upper_bound_of_float_variables.fill(1.8)
 
         self.known_optimum = np.ndarray(shape=(1), dtype=Trial)
 
