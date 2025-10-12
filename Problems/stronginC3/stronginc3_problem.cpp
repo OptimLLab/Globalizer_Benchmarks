@@ -162,7 +162,6 @@ LIB_EXPORT_API double Calculation(double x, double y)
   std::vector<std::string> u;
   result = rastr.CalculateFunctionals(point, u, 0);
 
-  //std::cout << "Calculation\n" << std::endl;
   return result;
 }
 

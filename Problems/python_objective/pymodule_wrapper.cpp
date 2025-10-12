@@ -1,10 +1,17 @@
-#include "pymodule_wrapper.h"
+﻿#include "pymodule_wrapper.h"
 
 #include <stdexcept>
 #include <iostream>
 
 using namespace std;
 
+// ------------------------------------------------------------------------------------------------
+/// <summary>
+/// Создает python list из float
+/// </summary>
+/// <param name="array">входящий массив</param>
+/// <param name="size">размер массива</param>
+/// <returns>получившийся список</returns>
 PyObject* makeFloatList(const double* array, int size)
 {
   PyObject *l = PyList_New(size);
@@ -13,6 +20,13 @@ PyObject* makeFloatList(const double* array, int size)
   return l;
 }
 
+// ------------------------------------------------------------------------------------------------
+/// <summary>
+/// Создает вектор double по python list
+/// </summary>
+/// <param name="list_obj">
+/// Создает вектор double по python list</param>
+/// <returns> вектор double</returns>
 std::vector<double> floatListToVectorDouble(PyObject* incoming)
 {
   std::vector<double> data;
@@ -31,6 +45,14 @@ std::vector<double> floatListToVectorDouble(PyObject* incoming)
   return data;
 }
 
+// ------------------------------------------------------------------------------------------------
+/// <summary>
+/// Добавляет переменную окружения
+/// </summary>
+/// <param name="name"></param>
+/// <param name="value"></param>
+/// <param name="overwrite"></param>
+/// <returns></returns>
 #ifdef WIN32
 int setenv(const char* name, const char* value, int overwrite)
 {
@@ -44,45 +66,25 @@ int setenv(const char* name, const char* value, int overwrite)
 }
 #endif
 
+// ------------------------------------------------------------------------------------------------
 TPythonModuleWrapper::TPythonModuleWrapper(const std::string& module_path)
 {
   setenv("PYTHONPATH", module_path.c_str(), true);
-  //std::cout << "AAAAAAAAAAAAAAAAAAAAAAAAAAAA1!!!!\n";
   Py_Initialize();
-  //std::cout << "AAAAAAAAAAAAAAAAAAAAAAAAAAAA2!!!!\n";
   auto pName = PyUnicode_FromString("objective_simple");
-  //std::cout << "AAAAAAAAAAAAAAAAAAAAAAAAAAAA3!!!!\n";
   PyErr_Print();
-  //std::cout << "AAAAAAAAAAAAAAAAAAAAAAAAAAAA4!!!!\n";  
   auto pModule = PyImport_Import(pName);
-  //std::cout << "AAAAAAAAAAAAAAAAAAAAAAAAAAAA5!!!!\n";  
   if (pModule == nullptr)
   {
     PyErr_Print();
     std::exit(1);
   }
-  //std::cout << "AAAAAAAAAAAAAAAAAAAAAAAAAAAA6!!!!\n";
   assert(pModule != nullptr);
   Py_DECREF(pName);
-  //std::cout << "AAAAAAAAAAAAAAAAAAAAAAAAAAAA7!!!!\n";
   auto pDict = PyModule_GetDict(pModule);
-  //std::cout << "AAAAAAAAAAAAAAAAAAAAAAAAAAAA8!!!!\n";
-  //auto pDimension = PyDict_GetItemString(pDict, "dimension");
-  //assert(pDimension != nullptr);
-  //mDimension = PyLong_AsLong(pDimension);
-  //Py_DECREF(pDimension);
-  //assert(mDimension > 0 && mDimension < 50);
+
   mDimension = 6;
 
-  //auto pUpper = PyDict_GetItemString(pDict, "upper");
-  //assert(pUpper != nullptr);
-  //mUpperBound = floatListToVectorDouble(pUpper);
-  //Py_DECREF(pUpper);
-
-  //auto pLower = PyDict_GetItemString(pDict, "lower");
-  //assert(pLower != nullptr);
-  //mLowerBound = floatListToVectorDouble(pLower);
-  //Py_DECREF(pLower);
 
   mLowerBound.resize(mDimension);
   mUpperBound.resize(mDimension);
@@ -99,11 +101,13 @@ TPythonModuleWrapper::TPythonModuleWrapper(const std::string& module_path)
   Py_DECREF(pModule);
 }
 
+// ------------------------------------------------------------------------------------------------
 int TPythonModuleWrapper::GetDimension() const
 {
   return mDimension;
 }
 
+// ------------------------------------------------------------------------------------------------
 double TPythonModuleWrapper::EvaluateFunction(const std::vector<double>& y) const
 {
   double retval = 0;
@@ -121,12 +125,14 @@ double TPythonModuleWrapper::EvaluateFunction(const std::vector<double>& y) cons
   return retval;
 }
 
+// ------------------------------------------------------------------------------------------------
 TPythonModuleWrapper::~TPythonModuleWrapper()
 {
   Py_DECREF(mPFunc);
   Py_Finalize();
 }
 
+// ------------------------------------------------------------------------------------------------
 void TPythonModuleWrapper::GetBounds(std::vector<double>& lower, std::vector<double>& upper) const
 {
   for (int i = 0; i < mDimension; i++)

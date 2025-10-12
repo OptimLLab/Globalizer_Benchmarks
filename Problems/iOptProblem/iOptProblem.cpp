@@ -1,4 +1,4 @@
-#ifndef WIN32
+﻿#ifndef WIN32
 #include <dlfcn.h>
 #endif
 
@@ -129,6 +129,7 @@ inline int iOptProblem::GetStartTrial(std::vector<double>& y, std::vector<std::s
   {
     return mFunction->GetStartTrial(y, u, values);
   }
+  return IGlobalOptimizationProblem::PROBLEM_ERROR;
 }
 
 
@@ -151,10 +152,10 @@ inline int iOptProblem::SetParameter(std::string name, std::string value)
 }
 
 // ------------------------------------------------------------------------------------------------
-//inline int iOptProblem::SetParameter(std::string name, std::any value)
-//{
-//  return IGlobalOptimizationProblem::PROBLEM_UNDEFINED;
-//}
+inline int iOptProblem::SetParameter(std::string name, IOptVariantType value)
+{
+  return IGlobalOptimizationProblem::PROBLEM_UNDEFINED;
+}
 
 // ------------------------------------------------------------------------------------------------
 inline int iOptProblem::SetParameter(std::string name, void* value)
