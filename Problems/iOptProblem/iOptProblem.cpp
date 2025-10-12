@@ -1,21 +1,25 @@
-#ifndef WIN32
-  #include <dlfcn.h>
+﻿#ifndef WIN32
+#include <dlfcn.h>
 #endif
 
 #include "iOptProblem.h"
 
 #include <iostream>
 #include <filesystem>
+#include <variant>
 
 // ------------------------------------------------------------------------------------------------
 iOptProblem::iOptProblem()
 {
   mIsInitialized = false;
-  mDimension = 0;
+  mDimension = 3;
 
   const char* filename = __FILE__;
   std::filesystem::path file_path(filename);
   mPyFilePath = file_path.parent_path().string();
+
+  functionScriptName = "rastrigin";
+  functionClassName = "Rastrigin";
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -28,7 +32,7 @@ int iOptProblem::SetConfigPath(const std::string& configPath)
 // ------------------------------------------------------------------------------------------------
 int iOptProblem::SetDimension(int dimension)
 {
-    return IGlobalOptimizationProblem::PROBLEM_OK;
+  return IGlobalOptimizationProblem::PROBLEM_OK;
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -45,7 +49,8 @@ int iOptProblem::Initialize()
 #ifndef WIN32
     mLibpython_handle = dlopen("/home/lebedev_i/miniconda3/lib/libpython3.9.so", RTLD_LAZY | RTLD_GLOBAL);
 #endif
-    mFunction = std::make_shared<TPythonModuleWrapper>(mPyFilePath);
+    std::vector<IOptVariantType> param = {mDimension};
+    mFunction = std::make_shared<TPythonModuleWrapper>(mPyFilePath, param, functionScriptName, functionClassName);
     mDimension = mFunction->GetDimension();
 
     mIsInitialized = true;
@@ -83,6 +88,7 @@ int iOptProblem::GetNumberOfFunctions() const
   {
     return mFunction->GetNumberOfFunctions();
   }
+  return 0;
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -92,6 +98,7 @@ int iOptProblem::GetNumberOfConstraints() const
   {
     return mFunction->GetNumberOfConstraints();
   }
+  return 0;
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -101,6 +108,19 @@ int iOptProblem::GetNumberOfCriterions() const
   {
     return mFunction->GetNumberOfCriterions();
   }
+  return 0;
+}
+
+// ------------------------------------------------------------------------------------------------
+double iOptProblem::CalculateFunctionals(const std::vector<double>& y, std::vector<std::string>& u, int fNumber)
+{
+  return mFunction->EvaluateFunction(y, fNumber);
+}
+
+// ------------------------------------------------------------------------------------------------
+inline std::vector<double> iOptProblem::CalculateAllFunctionals(const std::vector<double>& y, std::vector<std::string>& u)
+{
+  return mFunction->EvaluateAllFunction(y);
 }
 
 inline int iOptProblem::GetStartTrial(std::vector<double>& y, std::vector<std::string>& u, std::vector<double>& values)
@@ -109,18 +129,58 @@ inline int iOptProblem::GetStartTrial(std::vector<double>& y, std::vector<std::s
   {
     return mFunction->GetStartTrial(y, u, values);
   }
+  return IGlobalOptimizationProblem::PROBLEM_ERROR;
+}
+
+
+// ------------------------------------------------------------------------------------------------
+inline int iOptProblem::SetParameter(std::string name, std::string value)
+{
+  if (name == "Dimension")
+    mDimension = std::stoi(value);
+
+  else if (name == "mPyFilePath")
+    mPyFilePath = value;
+
+  else if (name == "functionScriptName")
+    functionScriptName = value;
+
+  else   if (name == "functionClassName")
+    functionClassName = value;
+
+  return IGlobalOptimizationProblem::PROBLEM_OK;
 }
 
 // ------------------------------------------------------------------------------------------------
-double iOptProblem::CalculateFunctionals(const std::vector<double>& y, std::vector<std::string>& u, int fNumber)
+inline int iOptProblem::SetParameter(std::string name, IOptVariantType value)
 {
-  return mFunction->EvaluateFunction(y);
+  return IGlobalOptimizationProblem::PROBLEM_UNDEFINED;
 }
 
 // ------------------------------------------------------------------------------------------------
-inline std::vector<double> iOptProblem::CalculateAllFunctionals(const std::vector<double>& y, std::vector<std::string>& u)
+inline int iOptProblem::SetParameter(std::string name, void* value)
 {
-  return mFunction->EvaluateAllFunction(y);
+  return IGlobalOptimizationProblem::PROBLEM_UNDEFINED;
+}
+
+// ------------------------------------------------------------------------------------------------
+inline void iOptProblem::GetParameters(std::vector<std::string>& names, std::vector<std::string>& values)
+{
+  names.resize(4);
+  values.resize(4);
+
+  names[0] = "Dimension";
+  values[0] = std::to_string(mDimension);
+
+  names[1] = "mPyFilePath";
+  values[1] = mPyFilePath;
+
+  names[2] = "functionScriptName";
+  values[2] = functionScriptName;
+
+  names[3] = "functionClassName";
+  values[3] = functionClassName;
+
 }
 
 // ------------------------------------------------------------------------------------------------

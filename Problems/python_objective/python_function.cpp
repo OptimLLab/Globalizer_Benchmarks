@@ -5,7 +5,7 @@
 #include "python_function.h"
 
 // ------------------------------------------------------------------------------------------------
-TPythonProblem::TPythonProblem()
+PythonProblem::PythonProblem()
 {
   mIsInitialized = false;
   mDimension = 0;
@@ -14,26 +14,26 @@ TPythonProblem::TPythonProblem()
 }
 
 // ------------------------------------------------------------------------------------------------
-int TPythonProblem::SetConfigPath(const std::string& configPath)
+int PythonProblem::SetConfigPath(const std::string& configPath)
 {
   mPyFilePath = std::string(configPath);
   return IGlobalOptimizationProblem::PROBLEM_OK;
 }
 
 // ------------------------------------------------------------------------------------------------
-int TPythonProblem::SetDimension(int dimension)
+int PythonProblem::SetDimension(int dimension)
 {
     return IGlobalOptimizationProblem::PROBLEM_OK;
 }
 
 // ------------------------------------------------------------------------------------------------
-int TPythonProblem::GetDimension() const
+int PythonProblem::GetDimension() const
 {
   return mDimension;
 }
 
 // ------------------------------------------------------------------------------------------------
-int TPythonProblem::Initialize()
+int PythonProblem::Initialize()
 {
   if (!mIsInitialized)
   {
@@ -51,7 +51,7 @@ int TPythonProblem::Initialize()
 }
 
 // ------------------------------------------------------------------------------------------------
-void TPythonProblem::GetBounds(std::vector<double>& lower, std::vector<double>& upper)
+void PythonProblem::GetBounds(std::vector<double>& lower, std::vector<double>& upper)
 {
   if (mIsInitialized)
   {
@@ -60,43 +60,43 @@ void TPythonProblem::GetBounds(std::vector<double>& lower, std::vector<double>& 
 }
 
 // ------------------------------------------------------------------------------------------------
-int TPythonProblem::GetOptimumValue(double& value) const
+int PythonProblem::GetOptimumValue(double& value) const
 {
   return IGlobalOptimizationProblem::PROBLEM_UNDEFINED;
 }
 
 // ------------------------------------------------------------------------------------------------
-int TPythonProblem::GetOptimumPoint(std::vector<double>& x, std::vector<std::string>& u) const
+int PythonProblem::GetOptimumPoint(std::vector<double>& x, std::vector<std::string>& u) const
 {
   return IGlobalOptimizationProblem::PROBLEM_UNDEFINED;
 }
 
 // ------------------------------------------------------------------------------------------------
-int TPythonProblem::GetNumberOfFunctions() const
+int PythonProblem::GetNumberOfFunctions() const
 {
   return 1;
 }
 
 // ------------------------------------------------------------------------------------------------
-int TPythonProblem::GetNumberOfConstraints() const
+int PythonProblem::GetNumberOfConstraints() const
 {
   return 0;
 }
 
 // ------------------------------------------------------------------------------------------------
-int TPythonProblem::GetNumberOfCriterions() const
+int PythonProblem::GetNumberOfCriterions() const
 {
   return 1;
 }
 
 // ------------------------------------------------------------------------------------------------
-double TPythonProblem::CalculateFunctionals(const std::vector<double>& y, std::vector<std::string>& u, int fNumber)
+double PythonProblem::CalculateFunctionals(const std::vector<double>& y, std::vector<std::string>& u, int fNumber)
 {
   return mFunction->EvaluateFunction(y);
 }
 
 // ------------------------------------------------------------------------------------------------
-TPythonProblem::~TPythonProblem()
+PythonProblem::~PythonProblem()
 {
 #ifndef WIN32
   if (mLibpython_handle)
@@ -107,7 +107,7 @@ TPythonProblem::~TPythonProblem()
 // ------------------------------------------------------------------------------------------------
 LIB_EXPORT_API IGlobalOptimizationProblem* create()
 {
-  return new TPythonProblem();
+  return new PythonProblem();
 }
 
 // ------------------------------------------------------------------------------------------------

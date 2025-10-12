@@ -1,4 +1,4 @@
-/////////////////////////////////////////////////////////////////////////////
+﻿/////////////////////////////////////////////////////////////////////////////
 //                                                                         //
 //             LOBACHEVSKY STATE UNIVERSITY OF NIZHNY NOVGOROD             //
 //                                                                         //
@@ -102,8 +102,8 @@ int main(int argc, char* argv[])
     double value = problePythonObjective->CalculateFunctionals(y, u, 0);
   }
 
-  IGlobalOptimizationProblem* iOptproble = 0;
-  if (InitGlobalOptimizationProblem(manager, iOptproble, "iOptProblem.dll"))
+  IGlobalOptimizationProblem* iOptProblem = 0;
+  if (InitGlobalOptimizationProblem(manager, iOptProblem, "iOptProblem.dll"))
   {
     std::cout << "Error during problem initialization\n";
     return 0;
@@ -111,9 +111,31 @@ int main(int argc, char* argv[])
   else
   {
     //problePythonObjective->SetDimension(2);
-    std::vector<double> y(iOptproble->GetDimension(), 0.5);
+    std::vector<double> y(iOptProblem->GetDimension(), 0.5);
     std::vector <std::string> u = { "B" };
-    double value = iOptproble->CalculateFunctionals(y, u, 0);
+    double value = iOptProblem->CalculateFunctionals(y, u, 0);
+
+    std::vector<std::string> names;
+    std::vector<std::string> values;
+    iOptProblem->GetParameters(names, values);
+    for (int i = 0; i < names.size(); i++)
+    {
+        std::cout << names[i] << "\t=\t" << values[i] << std::endl;
+    }
+  }
+
+  IGlobalOptimizationProblem* problemStronginC3 = 0;
+  if (InitGlobalOptimizationProblem(manager, problemStronginC3, "stronginC3.dll"))
+  {
+    std::cout << "Error during problem initialization\n";
+    return 0;
+  }
+  else
+  {
+    problemStronginC3->SetDimension(2);
+    std::vector<double> y = { 0.5, 0.5 };
+    std::vector <std::string> u;
+    double value = problemStronginC3->CalculateFunctionals(y, u, 0);
   }
 
 

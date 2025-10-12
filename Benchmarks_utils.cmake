@@ -175,10 +175,11 @@ macro(GLOBALIZER_BENCHMARKS_define_problem _name)
 		set_property(TARGET ${PROJECT_NAME_STR} PROPERTY FOLDER "problems")
 	endif()
 	
+	
 	if(GLOBALIZER_BENCHMARKS_define_problem_COMPILE_OPTIONS)
 		target_compile_options(${PROJECT_NAME_STR} PUBLIC ${GLOBALIZER_BENCHMARKS_define_problem_COMPILE_OPTIONS})
 	elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
-		target_compile_options(${PROJECT_NAME_STR} PUBLIC -std=c++11)
+		target_compile_options(${PROJECT_NAME_STR} PUBLIC -std=c++17 -march=native -fopenmp)
 	endif()
 	
 	

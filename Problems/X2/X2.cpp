@@ -42,7 +42,7 @@ X2Problem::X2Problem()
 
 }
 
-
+// ------------------------------------------------------------------------------------------------
 int X2Problem::SetDimension(int dimension)
 {
   if (dimension > 0 && dimension <= mMaxDimension)
@@ -54,11 +54,13 @@ int X2Problem::SetDimension(int dimension)
     return IGlobalOptimizationProblem::PROBLEM_ERROR;
 }
 
+// ------------------------------------------------------------------------------------------------
 int X2Problem::GetDimension() const
 {
   return mDimension;
 }
 
+// ------------------------------------------------------------------------------------------------
 int X2Problem::Initialize()
 {
   if (mDimension > 0)
@@ -69,7 +71,6 @@ int X2Problem::Initialize()
   else
     return IGlobalOptimizationProblem::PROBLEM_ERROR;
 }
-
 
 // ------------------------------------------------------------------------------------------------
 void X2Problem::GetBounds(std::vector<double>& lower, std::vector<double>& upper)
@@ -84,8 +85,6 @@ void X2Problem::GetBounds(std::vector<double>& lower, std::vector<double>& upper
 // ------------------------------------------------------------------------------------------------
 int X2Problem::GetOptimumValue(double& value) const
 {
-  //if (!mIsInitialized)
-  //  return IGlobalOptimizationProblem::PROBLEM_UNDEFINED;
   value = 0.0;
   int fn = function_number;
   for (int j = 0; j < mDimension; j++)
@@ -104,17 +103,20 @@ int X2Problem::GetOptimumValue(double& value) const
 // ------------------------------------------------------------------------------------------------
 int X2Problem::GetOptimumPoint(std::vector<double>& point, std::vector<std::string>& u) const
 {
-  //if (!mIsInitialized)
-  //  return IGlobalOptimizationProblem::PROBLEM_UNDEFINED;
+
   double min_ = 0.0;
 
-  for (int i = 0; i < mDimension; i++) {
-    //point[i] = 0.0;
-    if (X_magic[(function_number - 1) * mDimension * 2 + i * 2 + 1] == 0) {
-      if (X_magic[(function_number - 1) * mDimension * 2 + i * 2 + 0] > 0) {
+  for (int i = 0; i < mDimension; i++) 
+  {
+
+    if (X_magic[(function_number - 1) * mDimension * 2 + i * 2 + 1] == 0) 
+    {
+      if (X_magic[(function_number - 1) * mDimension * 2 + i * 2 + 0] > 0) 
+      {
         min_ = mLeftBorder;
       }
-      else {
+      else 
+      {
         min_ = mRightBorder;
       }
       point[i] = min_;
@@ -133,16 +135,19 @@ int X2Problem::GetOptimumPoint(std::vector<double>& point, std::vector<std::stri
   return IGlobalOptimizationProblem::PROBLEM_OK;
 }
 
+// ------------------------------------------------------------------------------------------------
 int X2Problem::GetNumberOfFunctions() const
 {
   return 1;
 }
 
+// ------------------------------------------------------------------------------------------------
 int X2Problem::GetNumberOfConstraints() const
 {
   return 0;
 }
 
+// ------------------------------------------------------------------------------------------------
 int X2Problem::GetNumberOfCriterions() const
 {
   return 1;
@@ -152,15 +157,11 @@ int X2Problem::GetNumberOfCriterions() const
 // ------------------------------------------------------------------------------------------------
 double X2Problem::CalculateFunctionals(const std::vector<double>& x, std::vector<std::string>& u, int fNumber)
 {
-  //function_number
   double sum = 0.;
   int fn = function_number;
   for (int j = 0; j < mDimension; j++)
     sum += X_magic[(fn - 1) * mDimension * 2 + j * 2 + 0] * (x[j])
     + X_magic[(fn - 1) * mDimension * 2 + j * 2 + 1] * x[j] * x[j];
-
-  //double shift = ((double)rand() / RAND_MAX) * 0.5;
-  //sum += shift;
 
   return sum;
 }

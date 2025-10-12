@@ -1,16 +1,14 @@
-﻿#ifndef __RASTRIGINPROBLEM_H__
-#define __RASTRIGINPROBLEM_H__
+﻿#ifndef __STRONGINC3PROBLEM_H__
+#define __STRONGINC3PROBLEM_H__
 
 #ifndef _CRT_SECURE_NO_WARNINGS
 #define _CRT_SECURE_NO_WARNINGS
 #endif
 
-#include <fstream>
-
 #include "IGlobalOptimizationProblem.h"
 
-/// Задача a*x^2+b*x+c
-class X2Problem : public IGlobalOptimizationProblem
+/// Задача Стронгина с тримя ограничениями
+class StronginC3 : public IGlobalOptimizationProblem
 {
 protected:
 
@@ -20,16 +18,10 @@ protected:
   bool mIsInitialized;
   /// Максималбная допустимая размерность
   static const int mMaxDimension = 100;
-  int function_number;
-
-  /// Нижняя граница области поиска
-  double mLeftBorder;
-  /// Верхняя граница области поиска
-  double mRightBorder;
 
 public:
 
-  X2Problem();
+  StronginC3();
   /** Метод задаёт размерность задачи
 
   Данный метод должен вызываться перед #Initialize. Размерность должна быть в
@@ -42,7 +34,6 @@ public:
   virtual int GetDimension() const;
   ///Инициализация задачи
   virtual int Initialize();
-
   /** Метод возвращает границы области поиска
   */
   virtual void GetBounds(std::vector<double>& lower, std::vector<double>& upper);
@@ -55,7 +46,7 @@ public:
   \param[out] y точка, в которой достигается оптимальное значение
   \return Код ошибки (#PROBLEM_OK или #UNDEFINED)
   */
-  virtual int GetOptimumPoint(std::vector<double>& x, std::vector<std::string>& u) const;
+  virtual int GetOptimumPoint(std::vector<double>&, std::vector<std::string>& u) const;
 
   /** Метод возвращает число общее функций в задаче (оно равно число ограничений + число критериев)
   \return Число функций
@@ -79,11 +70,14 @@ public:
   */
   virtual double CalculateFunctionals(const std::vector<double>& x, std::vector<std::string>& u, int fNumber);
 
-  ~X2Problem();
+  ~StronginC3();
 };
 
 extern "C" LIB_EXPORT_API IGlobalOptimizationProblem* create();
 extern "C" LIB_EXPORT_API void destroy(IGlobalOptimizationProblem* ptr);
-
+extern "C" LIB_EXPORT_API double Calculation1D(double x, int fType, int fNum);
+extern "C" LIB_EXPORT_API double Calculation(double x, double y);
+extern "C" LIB_EXPORT_API double GetUpperBounds();
+extern "C" LIB_EXPORT_API double GetLowerBounds();
 #endif
 // - end of file ----------------------------------------------------------------------------------

@@ -2,7 +2,7 @@
 //                                                                         //
 //             LOBACHEVSKY STATE UNIVERSITY OF NIZHNY NOVGOROD             //
 //                                                                         //
-//                       Copyright (c) 2016 by UNN.                        //
+//                       Copyright (c) 2025 by UNN.                        //
 //                          All Rights Reserved.                           //
 //                                                                         //
 //  File:      IGlobalOptimizationProblem.h                                //
@@ -32,7 +32,10 @@
 #include <vector>
 #include <string>
 #include <stdexcept>
-#include <any>
+#include <variant>
+
+/// Варианты типов параметров задачи
+using IOptVariantType = std::variant<int, double, std::string>;
 
 /**
 Базовый класс-интерфейс, от которого наследуются классы, описывающие задачи оптимизации.
@@ -76,7 +79,7 @@ public:
   */
   virtual int SetDimension(int dimension) = 0;
 
-  ///Возвращает размерность задачи, можно вызывать после #Initialize
+  /// Возвращает размерность задачи, можно вызывать после #Initialize
   virtual int GetDimension() const = 0;
 
   ///Инициализация задачи
@@ -195,7 +198,7 @@ public:
   \param[in] value значение параметра
   \return Код ошибки (#PROBLEM_OK или #UNDEFINED)
   */
-  //virtual int SetParameter(std::string name, std::any value);
+  virtual int SetParameter(std::string name, IOptVariantType value);
 
   /** Метод задает параметры задачи
   \param[in] name имя параметра
@@ -294,10 +297,10 @@ inline int IGlobalOptimizationProblem::SetParameter(std::string name, std::strin
 }
 
 // ------------------------------------------------------------------------------------------------
-//inline int IGlobalOptimizationProblem::SetParameter(std::string name, std::any value)
-//{
-//  return IGlobalOptimizationProblem::PROBLEM_UNDEFINED;
-//}
+inline int IGlobalOptimizationProblem::SetParameter(std::string name, IOptVariantType value)
+{
+  return IGlobalOptimizationProblem::PROBLEM_UNDEFINED;
+}
 
 // ------------------------------------------------------------------------------------------------
 inline int IGlobalOptimizationProblem::SetParameter(std::string name, void* value)

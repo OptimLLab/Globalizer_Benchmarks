@@ -80,6 +80,7 @@ double RastriginIntProblem::CalculateFunctionals(const std::vector<double>& x, s
   return sum;
 }
 
+// ------------------------------------------------------------------------------------------------
 int RastriginIntProblem::SetDimension(int dimension)
 {
   if (dimension > 0 && dimension <= mMaxDimension)
@@ -92,11 +93,13 @@ int RastriginIntProblem::SetDimension(int dimension)
     return -1;//IGlobalOptimizationProblem::PROBLEM_ERROR;
 }
 
+// ------------------------------------------------------------------------------------------------
 int RastriginIntProblem::GetDimension() const
 {
   return mDimension;
 }
 
+// ------------------------------------------------------------------------------------------------
 void RastriginIntProblem::GetBounds(std::vector<double>& lower, std::vector<double>& upper)
 {
   for (int i = 0; i < mDimension; i++)
@@ -106,16 +109,19 @@ void RastriginIntProblem::GetBounds(std::vector<double>& lower, std::vector<doub
   }
 }
 
+// ------------------------------------------------------------------------------------------------
 int RastriginIntProblem::GetNumberOfFunctions() const
 {
   return mNumberOfConstraints + mNumberOfCriterions;
 }
 
+// ------------------------------------------------------------------------------------------------
 int RastriginIntProblem::GetNumberOfConstraints() const
 {
   return mNumberOfConstraints;
 }
 
+// ------------------------------------------------------------------------------------------------
 int RastriginIntProblem::GetNumberOfCriterions() const
 {
   return mNumberOfCriterions;
@@ -202,11 +208,13 @@ int RastriginIntProblem::Initialize()
   return IGlobalOptimizationProblem::PROBLEM_OK;
 }
 
+// ------------------------------------------------------------------------------------------------
 int RastriginIntProblem::GetNumberOfDiscreteVariable() const
 {
   return mDimension - countContinuousVariables;
 }
 
+// ------------------------------------------------------------------------------------------------
 int RastriginIntProblem::SetNumberOfDiscreteVariable(int numberOfDiscreteVariable)
 {
   countContinuousVariables = mDimension - numberOfDiscreteVariable;

@@ -1,10 +1,17 @@
-#include "pymodule_wrapper.h"
+﻿#include "pymodule_wrapper.h"
 
 #include <stdexcept>
 #include <iostream>
 
 using namespace std;
 
+// ------------------------------------------------------------------------------------------------
+/// <summary>
+/// Создает python list из float
+/// </summary>
+/// <param name="array">входящий массив</param>
+/// <param name="size">размер массива</param>
+/// <returns>получившийся список</returns>
 PyObject* makeFloatList(const double* array, int size)
 {
   PyObject *l = PyList_New(size);
@@ -13,25 +20,17 @@ PyObject* makeFloatList(const double* array, int size)
   return l;
 }
 
-std::vector<double> floatListToVectorDouble(PyObject* incoming)
-{
-  std::vector<double> data;
-  if (PyList_Check(incoming))
-  {
-    data.resize(PyList_Size(incoming));
-    for(Py_ssize_t i = 0; i < PyList_Size(incoming); i++)
-    {
-      auto value = PyList_GetItem(incoming, i);
-      data[i] = PyFloat_AsDouble(value);
-      Py_DECREF(value);
-    }
-  }
-  else
-    throw std::logic_error("Passed PyObject pointer was not a list!");
-  return data;
-}
 
+
+// ------------------------------------------------------------------------------------------------
 #ifdef WIN32
+/// <summary>
+/// Добавляет переменную окружения
+/// </summary>
+/// <param name="name"></param>
+/// <param name="value"></param>
+/// <param name="overwrite"></param>
+/// <returns></returns>
 int setenv(const char* name, const char* value, int overwrite)
 {
   int errcode = 0;
@@ -44,6 +43,14 @@ int setenv(const char* name, const char* value, int overwrite)
 }
 #endif
 
+
+// ------------------------------------------------------------------------------------------------
+/// <summary>
+/// Создает вектор double по python list
+/// </summary>
+/// <param name="list_obj">
+/// Создает вектор double по python list</param>
+/// <returns> вектор double</returns>
 std::vector<double> py_list_to_vector_double(PyObject* list_obj) 
 {
   std::vector<double> result;
@@ -78,13 +85,95 @@ std::vector<double> py_list_to_vector_double(PyObject* list_obj)
   return result;
 }
 
-TPythonModuleWrapper::TPythonModuleWrapper(const std::string& module_path)
+// ------------------------------------------------------------------------------------------------
+/// <summary>
+/// Создает параметры для создания объекта класа
+/// </summary>
+/// <param name="param"></param>
+/// <returns></returns>
+PyObject* TPythonModuleWrapper::VectorToTuple(std::vector<IOptVariantType> param)
+{
+
+  std::vector<PyObject*> vec(param.size());
+  for (int i = 0; i < param.size(); i++)
+  {
+    if (param[i].index() == 0)//int
+      vec[i] = PyLong_FromLong(std::get<0>(param[i]));
+    else if (param[i].index() == 1) //double
+      vec[i] = PyFloat_FromDouble(std::get<1>(param[i]));
+    else if (param[i].index() == 2) //string
+      vec[i] = PyUnicode_FromString(std::get<2>(param[i]).c_str());
+  }
+
+  PyObject* tuple = PyTuple_New(vec.size());
+  if (!tuple) return nullptr;
+
+  for (size_t i = 0; i < vec.size(); ++i) {
+    PyObject* item = vec[i];
+    Py_INCREF(item); // Увеличиваем счетчик ссылок
+    PyTuple_SET_ITEM(tuple, i, item);
+  }
+
+  return tuple;
+}
+
+// ------------------------------------------------------------------------------------------------
+TPythonModuleWrapper::TPythonModuleWrapper(const std::string& module_path, std::vector<IOptVariantType> param,
+  std::string functionScriptName, std::string functionClassName)
 {
   setenv("PYTHONPATH", module_path.c_str(), true);
   Py_Initialize();
 
   PyErr_Print();
 
+  ///////////////////////////////////////////////////////
+  auto funcModule = PyImport_ImportModule(functionScriptName.c_str());
+  if (funcModule == nullptr)
+  {
+    PyErr_Print();
+    std::exit(1);
+  }
+  assert(funcModule != nullptr);
+
+  // Получаем класс из модуля
+  funcClass = PyObject_GetAttrString(funcModule, functionClassName.c_str());
+  if (!pClass || !PyCallable_Check(funcClass))
+  {
+    PyErr_Print();
+    std::cerr << "Cannot find class" << std::endl;
+    Py_DECREF(funcModule);
+    std::exit(1);
+  }
+
+
+
+  auto arglist = VectorToTuple(param);
+  // Создаем экземпляр класса
+  auto funcInstance = PyObject_CallObject(funcClass, arglist);
+  if (!funcInstance)
+  {
+    PyErr_Print();
+    std::cerr << "Failed to create instance" << std::endl;
+    Py_DECREF(funcClass);
+    Py_DECREF(funcModule);
+    std::exit(1);
+  }
+
+  PyObject* tuple = PyTuple_New(1);
+  if (!tuple) 
+  {
+    PyErr_Print();
+    Py_DECREF(funcClass);
+    Py_DECREF(funcModule);
+    std::exit(1);
+  }
+  PyTuple_SET_ITEM(tuple, 0, funcInstance);
+  Py_INCREF(funcInstance); 
+
+  ///////////////////////////////////////////////////////
+
+
+  ///////////////////////////////////////////////////////
   pModule = PyImport_ImportModule("Globalizer_problem");
   if (pModule == nullptr)
   {
@@ -93,7 +182,7 @@ TPythonModuleWrapper::TPythonModuleWrapper(const std::string& module_path)
   }
   assert(pModule != nullptr);
 
-  // �������� ����� �� ������
+  // Получаем класс из модуля
   pClass = PyObject_GetAttrString(pModule, "GlobalizerProblem");
   if (!pClass || !PyCallable_Check(pClass)) 
   {
@@ -103,8 +192,8 @@ TPythonModuleWrapper::TPythonModuleWrapper(const std::string& module_path)
     std::exit(1);
   }
 
-  // ������� ��������� ������
-  pInstance = PyObject_CallObject(pClass, NULL);
+  // Создаем экземпляр класса
+  pInstance = PyObject_CallObject(pClass, tuple);
   if (!pInstance) 
   {
     PyErr_Print();
@@ -114,7 +203,7 @@ TPythonModuleWrapper::TPythonModuleWrapper(const std::string& module_path)
     std::exit(1);
   }
 
-  // �������� �����������
+  // Получаем размерность
   PyObject* pResultDim = PyObject_CallMethod(pInstance, "get_dimension", NULL);
   mDimension = PyFloat_AsDouble(pResultDim);
   if (pResultDim)
@@ -122,7 +211,7 @@ TPythonModuleWrapper::TPythonModuleWrapper(const std::string& module_path)
   else
     PyErr_Print();
 
-  // �������� �������
+  // Получаем границы
   PyObject* pResultLB = PyObject_CallMethod(pInstance, "get_lower_bounds", NULL);
   mLowerBound = py_list_to_vector_double(pResultLB);
   if (pResultLB)
@@ -140,29 +229,35 @@ TPythonModuleWrapper::TPythonModuleWrapper(const std::string& module_path)
 
 }
 
+// ------------------------------------------------------------------------------------------------
 int TPythonModuleWrapper::GetDimension() const
 {
   return mDimension;
 }
 
-double TPythonModuleWrapper::EvaluateFunction(const std::vector<double>& y) const
+// ------------------------------------------------------------------------------------------------
+double TPythonModuleWrapper::EvaluateFunction(const std::vector<double>& y, int fNumber) const
 {
   double retval = 0;
 #pragma omp critical
-{
+  {
 
-  auto py_arg = makeFloatList(y.data(), mDimension);
-  auto arglist = PyTuple_Pack(1, py_arg);
-  auto result = PyObject_CallMethod(pInstance, "calculate", "O", arglist);
-  PyErr_Print();
-  retval = PyFloat_AsDouble(result);
-  Py_DECREF(py_arg);
-  Py_DECREF(arglist);
-  Py_DECREF(result);
-}
+    auto py_arg1 = makeFloatList(y.data(), mDimension);
+    auto py_arg2 = PyLong_FromLong(fNumber);
+    auto arglist = PyTuple_Pack(2, py_arg1, py_arg2);
+    auto result = PyObject_CallMethod(pInstance, "calculate", "O", arglist);
+    PyErr_Print();
+    retval = PyFloat_AsDouble(result);
+    Py_DECREF(py_arg1);
+    Py_DECREF(py_arg2);
+    Py_DECREF(arglist);
+    Py_DECREF(result);
+  }
   return retval;
 }
 
+
+// ------------------------------------------------------------------------------------------------
 std::vector<double> TPythonModuleWrapper::EvaluateAllFunction(const std::vector<double>& y) const
 {
   std::vector<double> retval;
@@ -181,15 +276,17 @@ std::vector<double> TPythonModuleWrapper::EvaluateAllFunction(const std::vector<
   return retval;
 }
 
+// ------------------------------------------------------------------------------------------------
 TPythonModuleWrapper::~TPythonModuleWrapper()
 {
-  // �������
+  // Очистка
   Py_DECREF(pInstance);
   Py_DECREF(pClass);
   Py_DECREF(pModule);
   Py_Finalize();
 }
 
+// ------------------------------------------------------------------------------------------------
 void TPythonModuleWrapper::GetBounds(std::vector<double>& lower, std::vector<double>& upper) const
 {
   for (int i = 0; i < mDimension; i++)
@@ -198,6 +295,7 @@ void TPythonModuleWrapper::GetBounds(std::vector<double>& lower, std::vector<dou
     upper[i] = mUpperBound[i];
   }
 }
+
 
 // ------------------------------------------------------------------------------------------------
 int TPythonModuleWrapper::GetNumberOfFunctions() const
@@ -217,7 +315,7 @@ int TPythonModuleWrapper::GetNumberOfFunctions() const
       PyErr_Print();
       return 1;
     }
-    
+
   }
   catch (...)
   {
@@ -296,7 +394,7 @@ inline int TPythonModuleWrapper::GetStartTrial(std::vector<double>& y, std::vect
       return -1;
     }
 
-    PyObject* pValues = PyObject_CallMethod(pInstance, "get_start_y", NULL);
+    PyObject* pValues = PyObject_CallMethod(pInstance, "get_start_value", NULL);
     if (pValues)
     {
       values = py_list_to_vector_double(pValues);
