@@ -1,17 +1,12 @@
 from typing import List
-
-from ML_Problems import Cardio2D
-
+import Cardio2D
 from rastrigin import Rastrigin
 from trial import Point
 from trial import FunctionValue
 from problem import Problem
-
-from ML_Problems import SVC_Fixed_Kernel
-
+import SVC_Fixed_Kernel
 from sklearn.datasets import load_breast_cancer
 from sklearn.utils import shuffle
-
 import requests
 from tqdm import tqdm
 import os
@@ -19,8 +14,7 @@ from pathlib import Path
 import hashlib
 import numpy as np
 import shutil
-
-from ML_Problems.ECGClassificationProblem import ECGClassificationProblem
+from ECGClassificationProblem import ECGClassificationProblem
 
 
 def _get_hash(path: Path) -> str:
@@ -29,7 +23,6 @@ def _get_hash(path: Path) -> str:
         while chunk := f.read(8192):
             file_hash.update(chunk)
     return file_hash.hexdigest()
-
 
 def download(path: Path, public_key: str) -> None:
     url = "https://cloud-api.yandex.net/v1/disk/public/resources"

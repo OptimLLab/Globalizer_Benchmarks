@@ -1,7 +1,7 @@
 import random
 
-from ML_Problems.scripts.dataset import SegmentationDataset
-from ML_Problems.scripts.metric import AllMetricTracker
+from scripts.dataset import SegmentationDataset
+from scripts.metric import AllMetricTracker
 from trial import Point
 from trial import FunctionValue
 from problem import Problem
@@ -16,8 +16,8 @@ import torch
 import torch.nn as nn
 import numpy as np
 from lightning.pytorch import LightningModule
-from ML_Problems.scripts.metric import SegmentationMetric
-from ML_Problems.scripts.model import Encoder, Decoder, UNet
+from scripts.metric import SegmentationMetric
+from scripts.model import Encoder, Decoder, UNet
 
 
 

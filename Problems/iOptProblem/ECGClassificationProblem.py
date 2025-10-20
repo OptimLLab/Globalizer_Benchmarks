@@ -1,27 +1,16 @@
-import random
-
-from ML_Problems.ClassificationScripts.dataset import ECGDataset
-from ML_Problems.ClassificationScripts.model import MobileNetV3Small1D
-
+from ClassificationScripts.dataset import ECGDataset
+from ClassificationScripts.model import MobileNetV3Small1D
 from trial import Point
 from trial import FunctionValue
 from problem import Problem
 from typing import Dict
-from datetime import datetime
-import os
 from sklearn.model_selection import train_test_split
-from torch.utils.data import DataLoader
-from lightning.pytorch import Trainer
-from lightning.pytorch.callbacks import ModelCheckpoint, EarlyStopping
 import numpy as np
-from tqdm import tqdm
 import wfdb
 from torch.utils.data import Dataset, DataLoader
 import torch
 import torch.nn as nn
 import os
-import stat
-
 
 def train(model, train_loader, test_loader, epochs=10, lr=1e-3):
     device = torch.device("cpu")#("cuda" if torch.cuda.is_available() else "cpu")
