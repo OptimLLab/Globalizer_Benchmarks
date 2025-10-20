@@ -20,6 +20,9 @@ import hashlib
 import numpy as np
 import shutil
 
+from ML_Problems.ECGClassificationProblem import ECGClassificationProblem
+
+
 def _get_hash(path: Path) -> str:
     file_hash = hashlib.sha256()
     with open(path, "rb") as f:
@@ -121,6 +124,20 @@ def load_breast_cancer_data():
     inputs, outputs = shuffle(x_raw, y_raw ^ 1, random_state=42)
     return inputs, outputs
 
+def test_ecg_classification_problem():
+
+    p_value_bound = {'low': 0.0, 'up': 1.0}
+    f_value_bound = {'low': 80.0, 'up': 200.0}
+    problem_ecg_class = ECGClassificationProblem(p_value_bound, f_value_bound)
+
+    problem = GlobalizerProblem(problem_ecg_class)
+
+    bound = problem.get_lower_bounds()
+    print(bound)
+    result = problem.calculate([0.5, 100], 0)
+    print(result)
+    result_all_function = problem.calculate_all_functionals([0.5, 100])
+    print(result_all_function)
 
 def test_svc1d_problem():
     x, y = load_breast_cancer_data()
@@ -168,6 +185,7 @@ def test_rastrigin():
     print(resultAllFunction)
 
 if __name__ == "__main__":
+    test_ecg_classification_problem()
     #test_svc1d_problem()
     #test_segmentation_problem()
-    test_rastrigin()
+    #test_rastrigin()
