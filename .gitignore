@@ -82,3 +82,11 @@ ipch/
 
 #Python
 *.pyc
+
+#iOptProblems33dth
+Problems/iOptProblem/data/
+Problems/iOptProblem/lightning_logs/
+Problems/iOptProblem/models/
+Problems/iOptProblem/__pycache__/
+Problems/iOptProblem/.idea/
+Problems/iOptProblem/ecg_ludb_records/

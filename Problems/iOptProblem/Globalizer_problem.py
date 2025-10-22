@@ -1,17 +1,12 @@
 from typing import List
-
-from ML_Problems import Cardio2D
-
+import Cardio2D
 from rastrigin import Rastrigin
 from trial import Point
 from trial import FunctionValue
 from problem import Problem
-
-from ML_Problems import SVC_Fixed_Kernel
-
+import SVC_Fixed_Kernel
 from sklearn.datasets import load_breast_cancer
 from sklearn.utils import shuffle
-
 import requests
 from tqdm import tqdm
 import os
@@ -19,6 +14,8 @@ from pathlib import Path
 import hashlib
 import numpy as np
 import shutil
+from ECGClassificationProblem import ECGClassificationProblem
+
 
 def _get_hash(path: Path) -> str:
     file_hash = hashlib.sha256()
@@ -26,7 +23,6 @@ def _get_hash(path: Path) -> str:
         while chunk := f.read(8192):
             file_hash.update(chunk)
     return file_hash.hexdigest()
-
 
 def download(path: Path, public_key: str) -> None:
     url = "https://cloud-api.yandex.net/v1/disk/public/resources"
@@ -121,6 +117,17 @@ def load_breast_cancer_data():
     inputs, outputs = shuffle(x_raw, y_raw ^ 1, random_state=42)
     return inputs, outputs
 
+def test_ecg_classification_problem():
+    problem_ecg_class = ECGClassificationProblem(2)
+
+    problem = GlobalizerProblem(problem_ecg_class)
+
+    bound = problem.get_lower_bounds()
+    print(bound)
+    result = problem.calculate([0.5, 100], 0)
+    print(result)
+    result_all_function = problem.calculate_all_functionals([0.5, 100])
+    print(result_all_function)
 
 def test_svc1d_problem():
     x, y = load_breast_cancer_data()
@@ -168,6 +175,7 @@ def test_rastrigin():
     print(resultAllFunction)
 
 if __name__ == "__main__":
+    test_ecg_classification_problem()
     #test_svc1d_problem()
     #test_segmentation_problem()
-    test_rastrigin()
+    #test_rastrigin()
