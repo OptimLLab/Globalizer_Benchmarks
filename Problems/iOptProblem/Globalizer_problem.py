@@ -118,10 +118,7 @@ def load_breast_cancer_data():
     return inputs, outputs
 
 def test_ecg_classification_problem():
-
-    p_value_bound = {'low': 0.0, 'up': 1.0}
-    f_value_bound = {'low': 80.0, 'up': 200.0}
-    problem_ecg_class = ECGClassificationProblem(p_value_bound, f_value_bound)
+    problem_ecg_class = ECGClassificationProblem(2)
 
     problem = GlobalizerProblem(problem_ecg_class)
 

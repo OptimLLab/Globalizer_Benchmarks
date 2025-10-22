@@ -96,10 +96,10 @@ def prepare_data():
     return X, y
 
 class ECGClassificationProblem(Problem):
-    def __init__(self, p_bound: Dict[str, float], features_bound: Dict[str, float]):
+    def __init__(self, dimension: int):
         super(ECGClassificationProblem, self).__init__()
-        self.dimension = 2
-        self.number_of_float_variables = 2
+        self.dimension = dimension
+        self.number_of_float_variables = dimension
         self.number_of_objectives = 1
         self.number_of_constraints = 0
 
@@ -119,10 +119,8 @@ class ECGClassificationProblem(Problem):
 
 
         self.float_variable_names = np.array(["P parameter", "Features parameter"], dtype=str)
-        self.lower_bound_of_float_variables = np.array([p_bound['low'], features_bound['low']],
-                                                       dtype=np.double)
-        self.upper_bound_of_float_variables = np.array([p_bound['up'], features_bound['up']],
-                                                       dtype=np.double)
+        self.lower_bound_of_float_variables = [0.0, 80.0]
+        self.upper_bound_of_float_variables = [1.0, 200.0]
 
 
 
