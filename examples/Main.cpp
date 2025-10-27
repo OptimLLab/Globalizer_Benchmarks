@@ -74,6 +74,23 @@ int main(int argc, char* argv[])
     double value = problemRastrigin->CalculateFunctionals(y, u, 0);
   }
 
+  IGlobalOptimizationProblem* problemRastriginC1 = 0;
+  if (InitGlobalOptimizationProblem(manager, problemRastriginC1, "rastriginC1.dll"))
+  {
+    std::cout << "Error during problem initialization\n";
+    return 0;
+  }
+  else
+  {
+    std::vector<double> y;
+    std::vector <std::string> u;
+    std::vector<double> val;
+
+    problemRastriginC1->GetStartTrial(y, u, val);
+
+    double value = problemRastriginC1->CalculateFunctionals(y, u, 0);
+  }
+
   IGlobalOptimizationProblem* problemRastriginInt = 0;
   if (InitGlobalOptimizationProblem(manager, problemRastriginInt, "rastriginInt.dll"))
   {
