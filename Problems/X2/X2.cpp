@@ -75,6 +75,8 @@ int X2Problem::Initialize()
 // ------------------------------------------------------------------------------------------------
 void X2Problem::GetBounds(std::vector<double>& lower, std::vector<double>& upper)
 {
+  lower.resize(mDimension);
+  upper.resize(mDimension);
   for (int i = 0; i < mDimension; i++)
   {
     lower[i] = mLeftBorder;
@@ -105,6 +107,8 @@ int X2Problem::GetOptimumPoint(std::vector<double>& point, std::vector<std::stri
 {
 
   double min_ = 0.0;
+
+  point.resize(mDimension);
 
   for (int i = 0; i < mDimension; i++) 
   {

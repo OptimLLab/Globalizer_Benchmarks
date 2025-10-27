@@ -1,20 +1,20 @@
-﻿#include "rastrigin_problem.h"
+﻿#include "rastriginC1_problem.h"
 
 #define _USE_MATH_DEFINES
 #include <math.h>
 #include <iostream>
 
 // ------------------------------------------------------------------------------------------------
-RastriginProblem::RastriginProblem()
+RastriginC1Problem::RastriginC1Problem()
 {
   mIsInitialized = false;
-  mDimension = 1;
+  mDimension = 50;
 }
 
 // ------------------------------------------------------------------------------------------------
-int RastriginProblem::SetDimension(int dimension)
+int RastriginC1Problem::SetDimension(int dimension)
 {
-  if(dimension > 0 && dimension <= mMaxDimension)
+  if(dimension >= 50 && dimension <= mMaxDimension)
   {
     mDimension = dimension;
     return IGlobalOptimizationProblem::PROBLEM_OK;
@@ -24,13 +24,13 @@ int RastriginProblem::SetDimension(int dimension)
 }
 
 // ------------------------------------------------------------------------------------------------
-int RastriginProblem::GetDimension() const
+int RastriginC1Problem::GetDimension() const
 {
   return mDimension;
 }
 
 // ------------------------------------------------------------------------------------------------
-int RastriginProblem::Initialize()
+int RastriginC1Problem::Initialize()
 {
   if (mDimension > 0)
   {
@@ -42,12 +42,13 @@ int RastriginProblem::Initialize()
 }
 
 // ------------------------------------------------------------------------------------------------
-void RastriginProblem::GetBounds(std::vector<double>& lower, std::vector<double>& upper)
+void RastriginC1Problem::GetBounds(std::vector<double>& lower, std::vector<double>& upper)
 {
   if (mIsInitialized)
   {
     lower.resize(mDimension);
     upper.resize(mDimension);
+
     for (int i = 0; i < mDimension; i++)
     {
       lower[i] = -2.2;
@@ -57,7 +58,7 @@ void RastriginProblem::GetBounds(std::vector<double>& lower, std::vector<double>
 }
 
 // ------------------------------------------------------------------------------------------------
-int RastriginProblem::GetOptimumValue(double& value) const
+int RastriginC1Problem::GetOptimumValue(double& value) const
 {
   if (!mIsInitialized)
     return IGlobalOptimizationProblem::PROBLEM_UNDEFINED;
@@ -67,7 +68,7 @@ int RastriginProblem::GetOptimumValue(double& value) const
 }
 
 // ------------------------------------------------------------------------------------------------
-int RastriginProblem::GetOptimumPoint(std::vector<double>& point, std::vector<std::string>& u) const
+int RastriginC1Problem::GetOptimumPoint(std::vector<double>& point, std::vector<std::string>& u) const
 {
   if (!mIsInitialized)
     return IGlobalOptimizationProblem::PROBLEM_UNDEFINED;
@@ -76,47 +77,75 @@ int RastriginProblem::GetOptimumPoint(std::vector<double>& point, std::vector<st
 
   for (int i = 0; i < mDimension; i++)
     point[i] = 0.0;
+  return IGlobalOptimizationProblem::PROBLEM_OK;
+}
+
+// ------------------------------------------------------------------------------------------------
+int RastriginC1Problem::GetNumberOfFunctions() const
+{
+  return GetNumberOfConstraints() + GetNumberOfCriterions();
+}
+
+// ------------------------------------------------------------------------------------------------
+int RastriginC1Problem::GetNumberOfConstraints() const
+{
+  return 1;
+}
+
+// ------------------------------------------------------------------------------------------------
+int RastriginC1Problem::GetNumberOfCriterions() const
+{
+  return 1;
+}
+
+// ------------------------------------------------------------------------------------------------
+double RastriginC1Problem::CalculateFunctionals(const std::vector<double>& x, std::vector<std::string>& u, int fNumber)
+{
+  double sum = 0.;
+  if (fNumber == 0)
+  {
+    for (int j = 0; j < mDimension; j++)
+      sum += x[j] * x[j];
+
+    sum += -1.5;
+  }
+  else if (fNumber == 1)
+  {
+    for (int j = 0; j < mDimension; j++)
+      sum += x[j] * x[j] - 10. * cos(2.0 * M_PI * x[j]) + 10.0;
+  }
+  return sum;
+}
+
+// ------------------------------------------------------------------------------------------------
+RastriginC1Problem::~RastriginC1Problem()
+{
+
+}
+
+// ------------------------------------------------------------------------------------------------
+inline int RastriginC1Problem::GetStartTrial(std::vector<double>& y, std::vector<std::string>& u, std::vector<double>& values)
+{
+  if (!mIsInitialized)
+    return IGlobalOptimizationProblem::PROBLEM_UNDEFINED;
+
+  y.resize(mDimension);
+
+  for (int i = 0; i < mDimension; i++)
+    y[i] = 0.1;
+
+  values.resize(GetNumberOfFunctions());
+
+  for (int j = 0; j < GetNumberOfFunctions(); j++)
+    values[j] = CalculateFunctionals(y, u, j);
 
   return IGlobalOptimizationProblem::PROBLEM_OK;
 }
 
 // ------------------------------------------------------------------------------------------------
-int RastriginProblem::GetNumberOfFunctions() const
-{
-  return 1;
-}
-
-// ------------------------------------------------------------------------------------------------
-int RastriginProblem::GetNumberOfConstraints() const
-{
-  return 0;
-}
-
-// ------------------------------------------------------------------------------------------------
-int RastriginProblem::GetNumberOfCriterions() const
-{
-  return 1;
-}
-
-// ------------------------------------------------------------------------------------------------
-double RastriginProblem::CalculateFunctionals(const std::vector<double>& x, std::vector<std::string>& u, int fNumber)
-{
-  double sum = 0.;
-  for (int j = 0; j < mDimension; j++)
-    sum += x[j] * x[j] - 10. * cos(2.0 * M_PI * x[j]) + 10.0;
-  return sum;
-}
-
-// ------------------------------------------------------------------------------------------------
-RastriginProblem::~RastriginProblem()
-{
-
-}
-
-// ------------------------------------------------------------------------------------------------
 LIB_EXPORT_API IGlobalOptimizationProblem* create()
 {
-  return new RastriginProblem();
+  return new RastriginC1Problem();
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -125,59 +154,4 @@ LIB_EXPORT_API void destroy(IGlobalOptimizationProblem* ptr)
   delete ptr;
 }
 
-// ------------------------------------------------------------------------------------------------
-LIB_EXPORT_API double Calculation1D(double x, int fType, int fNum)
-{
-  std::cout << "Calculation\n" << std::endl;
-  return x + fType + fNum;
-}
-
-// ------------------------------------------------------------------------------------------------
-LIB_EXPORT_API double Calculation(double x, double y)
-{
-  double result = 0;
-
-  RastriginProblem rastr;
-  rastr.SetDimension(2);
-  rastr.Initialize();
-  std::vector<double> point = { x, y };
-  std::vector<std::string> u;
-  result = rastr.CalculateFunctionals(point, u, 0);
-
-  //std::cout << "Calculation\n" << std::endl;
-  return result;
-}
-
-// ------------------------------------------------------------------------------------------------
-LIB_EXPORT_API double GetUpperBounds()
-{
-  double result = 0;
-
-  RastriginProblem rastr;
-  rastr.SetDimension(2);
-  rastr.Initialize();
-  std::vector<double> Upper = { 0.0, 0.0 };
-  std::vector<double> Lower = { 0.0, 0.0 };
-  rastr.GetBounds(Lower, Upper);
-
-  result = Upper[0];
-
-  return result;
-}
-
-// ------------------------------------------------------------------------------------------------
-LIB_EXPORT_API double GetLowerBounds()
-{
-  double result = 0;
-
-  RastriginProblem rastr;
-  rastr.SetDimension(2);
-  rastr.Initialize();
-  std::vector<double> Upper = { 0.0, 0.0 };
-  std::vector<double> Lower = { 0.0, 0.0 };
-  rastr.GetBounds(Lower, Upper);
-
-  result = Lower[0];
-  return result;
-}
 // - end of file ----------------------------------------------------------------------------------

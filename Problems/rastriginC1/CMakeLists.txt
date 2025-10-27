@@ -1,0 +1,1 @@
+GLOBALIZER_BENCHMARKS_define_problem(rastriginC1)

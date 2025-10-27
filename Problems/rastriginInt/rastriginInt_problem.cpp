@@ -45,10 +45,15 @@ int RastriginIntProblem::GetOptimumPoint(std::vector<double>& point, std::vector
   if (!this->mIsInitialized)
     return IGlobalOptimizationProblem::PROBLEM_UNDEFINED;
 
+  point.resize(countContinuousVariables);
+
   for (int i = 0; i < countContinuousVariables; i++)
     point[i] = 0.0;
 
   auto ndv = GetNumberOfDiscreteVariable();
+
+  u.resize(ndv);
+
   std::vector< std::vector<std::string>> values;
   GetDiscreteVariableValues(values);
 
@@ -102,10 +107,16 @@ int RastriginIntProblem::GetDimension() const
 // ------------------------------------------------------------------------------------------------
 void RastriginIntProblem::GetBounds(std::vector<double>& lower, std::vector<double>& upper)
 {
-  for (int i = 0; i < mDimension; i++)
+  if (mIsInitialized)
   {
-    lower[i] = mLeftBorder;
-    upper[i] = mRightBorder;
+    lower.resize(mDimension);
+    upper.resize(mDimension);
+
+    for (int i = 0; i < mDimension; i++)
+    {
+      lower[i] = mLeftBorder;
+      upper[i] = mRightBorder;
+    }
   }
 }
 
@@ -179,6 +190,11 @@ int RastriginIntProblem::Initialize()
   }
 
   this->GetOptimumPoint(optPoint, u);
+
+  for (auto ui : u)
+  {
+    optPoint.push_back(ui == "A" ? A[0] : B[0]);
+  }
 
 
   int count = (int)pow(2.0, this->mDimension);
