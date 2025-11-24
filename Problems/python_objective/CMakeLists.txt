@@ -10,7 +10,7 @@ endif()
 
 set(COMPILER_FLAGS "")
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
-  set(COMPILER_FLAGS -std=c++11 -march=native -fopenmp)
+  set(COMPILER_FLAGS -std=c++17 -march=native -fopenmp)
 endif()
 
 if(Python_Development_FOUND AND Python_NumPy_FOUND)
