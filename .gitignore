@@ -89,4 +89,7 @@ Problems/iOptProblem/lightning_logs/
 Problems/iOptProblem/models/
 Problems/iOptProblem/__pycache__/
 Problems/iOptProblem/.idea/
+Problems/iOptProblem/.venv/
 Problems/iOptProblem/ecg_ludb_records/
+Problems/iOptProblem/Tests/data/datasets/
+**/__pycache__/

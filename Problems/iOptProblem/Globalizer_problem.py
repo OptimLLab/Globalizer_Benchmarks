@@ -1,5 +1,6 @@
 from typing import List
 import Cardio2D
+from Tests.TestsProblem import TestsProblem
 from rastrigin import Rastrigin
 from trial import Point
 from trial import FunctionValue
@@ -107,8 +108,8 @@ class GlobalizerProblem:
         self.current_coordinate = [0] * dimension
         self.point: Point = Point(float_variables=np.array(self.current_coordinate), discrete_variables=None)
         self.function_value: FunctionValue = FunctionValue()
-        self.result = self.problem.calculate(self.point, self.function_value)
-        self.result_value = float(self.result.value)
+        #self.result = self.problem.calculate(self.point, self.function_value)
+        #self.result_value = float(self.result.value)
 
 
 def load_breast_cancer_data():
@@ -174,8 +175,20 @@ def test_rastrigin():
     resultAllFunction = problem.calculate_all_functionals([0.5] * problem.get_dimension())
     print(resultAllFunction)
 
+def TestsProblemTest():
+    problem_ecg_class = TestsProblem('balance', 'svc')
+
+    problem = GlobalizerProblem(problem_ecg_class)
+
+
+    result = problem.calculate([1e-7, 1e2])
+    print(result)
+
+
+
 if __name__ == "__main__":
-    test_ecg_classification_problem()
+    TestsProblemTest()
+    #test_ecg_classification_problem()
     #test_svc1d_problem()
     #test_segmentation_problem()
     #test_rastrigin()
