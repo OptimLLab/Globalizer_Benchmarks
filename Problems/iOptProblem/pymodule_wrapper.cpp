@@ -21,6 +21,15 @@ PyObject* makeFloatList(const double* array, int size)
 }
 
 
+PyObject* makeStrList(std::vector<std::string> array)
+{
+    PyObject* l = PyList_New(array.size());
+    for (int i = 0; i != array.size(); i++)
+        PyList_SET_ITEM(l, i, PyUnicode_FromString(array[i].c_str()));
+    return l;
+}
+
+
 
 // ------------------------------------------------------------------------------------------------
 #ifdef WIN32
@@ -43,6 +52,74 @@ int setenv(const char* name, const char* value, int overwrite)
 }
 #endif
 
+
+std::vector<std::vector<std::string>> py_list_of_list_to_vector_vectors_str(PyObject* list_obj) {
+    std::vector<std::vector<std::string>> result;
+
+    if (!list_obj || !PyList_Check(list_obj))
+    {
+        throw std::runtime_error("Invalid input: not a Python list");
+    }
+
+    Py_ssize_t outer_size = PyList_Size(list_obj);
+    result.reserve(outer_size);
+
+    for (Py_ssize_t i = 0; i < outer_size; ++i)
+    {
+        // Берем ссылку на внутренний список
+        PyObject* inner_list_obj = PyList_GetItem(list_obj, i);
+        Py_INCREF(inner_list_obj); // Увеличиваем счетчик ссылок
+
+        std::unique_ptr<PyObject, decltype(&Py_DECREF)> inner_list_guard(
+            inner_list_obj, Py_DECREF);
+
+        if (!PyList_Check(inner_list_obj))
+        {
+            result.push_back(std::vector<std::string>());
+            continue;
+        }
+
+        std::vector<std::string> inner_vec;
+        Py_ssize_t inner_size = PyList_Size(inner_list_obj);
+        inner_vec.reserve(inner_size);
+
+        for (Py_ssize_t j = 0; j < inner_size; ++j)
+        {
+            PyObject* item = PyList_GetItem(inner_list_obj, j);
+            Py_INCREF(item);
+
+            std::unique_ptr<PyObject, decltype(&Py_DECREF)> item_guard(
+                item, Py_DECREF);
+
+            // Получаем строковое представление
+            PyObject* py_str = PyObject_Str(item);
+            if (!py_str)
+            {
+                inner_vec.push_back(std::string());
+                continue;
+            }
+
+            std::unique_ptr<PyObject, decltype(&Py_DECREF)> str_guard(
+                py_str, Py_DECREF);
+
+            // Конвертируем в UTF-8
+            const char* c_str = PyUnicode_AsUTF8(py_str);
+            if (c_str)
+            {
+                inner_vec.push_back(std::string(c_str));
+            }
+            else
+            {
+                inner_vec.push_back(std::string());
+                PyErr_Clear(); // Очищаем ошибку, если была
+            }
+        }
+
+        result.push_back(std::move(inner_vec));
+    }
+
+    return result;
+}
 
 // ------------------------------------------------------------------------------------------------
 /// <summary>
@@ -227,6 +304,14 @@ TPythonModuleWrapper::TPythonModuleWrapper(const std::string& module_path, std::
     PyErr_Print();
 
 
+  PyObject* pResultDiscreteParams = PyObject_CallMethod(pInstance, "get_discrete_params", NULL);
+  discreteParams = py_list_of_list_to_vector_vectors_str(pResultDiscreteParams);
+  if (pResultDiscreteParams)
+      Py_DECREF(pResultDiscreteParams);
+  else
+      PyErr_Print();
+
+
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -236,20 +321,24 @@ int TPythonModuleWrapper::GetDimension() const
 }
 
 // ------------------------------------------------------------------------------------------------
-double TPythonModuleWrapper::EvaluateFunction(const std::vector<double>& y, int fNumber) const
+double TPythonModuleWrapper::EvaluateFunction(const std::vector<double>& y, const std::vector<std::string>& categorys, int fNumber) const
 {
   double retval = 0;
 #pragma omp critical
   {
 
-    auto py_arg1 = makeFloatList(y.data(), mDimension);
-    auto py_arg2 = PyLong_FromLong(fNumber);
-    auto arglist = PyTuple_Pack(2, py_arg1, py_arg2);
+    auto py_arg1 = makeFloatList(y.data(), mDimension - discreteParams.size());
+    auto py_arg2 = makeStrList(categorys);
+    auto py_arg3 = PyLong_FromLong(fNumber);
+
+    auto arglist = PyTuple_Pack(3, py_arg1, py_arg2, py_arg3);
+
     auto result = PyObject_CallMethod(pInstance, "calculate", "O", arglist);
     PyErr_Print();
     retval = PyFloat_AsDouble(result);
     Py_DECREF(py_arg1);
     Py_DECREF(py_arg2);
+    Py_DECREF(py_arg3);
     Py_DECREF(arglist);
     Py_DECREF(result);
   }
@@ -258,18 +347,22 @@ double TPythonModuleWrapper::EvaluateFunction(const std::vector<double>& y, int 
 
 
 // ------------------------------------------------------------------------------------------------
-std::vector<double> TPythonModuleWrapper::EvaluateAllFunction(const std::vector<double>& y) const
+std::vector<double> TPythonModuleWrapper::EvaluateAllFunction(const std::vector<double>& y, const std::vector<std::string>& categorys) const
 {
   std::vector<double> retval;
 #pragma omp critical
   {
 
-    auto py_arg = makeFloatList(y.data(), mDimension);
-    auto arglist = PyTuple_Pack(1, py_arg);
+    auto py_arg1 = makeFloatList(y.data(), mDimension);
+    auto py_arg2 = makeStrList(categorys);
+
+    auto arglist = PyTuple_Pack(2, py_arg1, py_arg2);
+
     auto result = PyObject_CallMethod(pInstance, "calculate_all_functionals", "O", arglist);
     PyErr_Print();
     retval = py_list_to_vector_double(result);
-    Py_DECREF(py_arg);
+    Py_DECREF(py_arg1);
+    Py_DECREF(py_arg2);
     Py_DECREF(arglist);
     Py_DECREF(result);
   }
@@ -289,7 +382,7 @@ TPythonModuleWrapper::~TPythonModuleWrapper()
 // ------------------------------------------------------------------------------------------------
 void TPythonModuleWrapper::GetBounds(std::vector<double>& lower, std::vector<double>& upper) const
 {
-  for (int i = 0; i < mDimension; i++)
+  for (int i = 0; i < mDimension - discreteParams.size(); i++)
   {
     lower[i] = mLowerBound[i];
     upper[i] = mUpperBound[i];
@@ -375,6 +468,11 @@ int TPythonModuleWrapper::GetNumberOfCriterions() const
   }
 }
 
+std::vector<std::vector<std::string>> TPythonModuleWrapper::GetDescreteParameters()
+{
+    return discreteParams;
+}
+
 // ------------------------------------------------------------------------------------------------
 inline int TPythonModuleWrapper::GetStartTrial(std::vector<double>& y, std::vector<std::string>& u, std::vector<double>& values)
 {
@@ -385,7 +483,7 @@ inline int TPythonModuleWrapper::GetStartTrial(std::vector<double>& y, std::vect
     if (pStartY)
     {
       y = py_list_to_vector_double(pStartY);
-
+      u[0] = GetDescreteParameters()[0][0]; // !!!! Bad
       Py_DECREF(pStartY);
     }
     else

@@ -18,8 +18,8 @@ iOptProblem::iOptProblem()
   std::filesystem::path file_path(filename);
   mPyFilePath = file_path.parent_path().string();
 
-  functionScriptName = "rastrigin";
-  functionClassName = "Rastrigin";
+  functionScriptName = "TestsProblem";
+  functionClassName = "TestsProblem";
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -49,7 +49,7 @@ int iOptProblem::Initialize()
 #ifndef WIN32
     mLibpython_handle = dlopen("/home/lebedev_i/miniconda3/lib/libpython3.9.so", RTLD_LAZY | RTLD_GLOBAL);
 #endif
-    std::vector<IOptVariantType> param = {mDimension};
+    std::vector<IOptVariantType> param = { datasetName, methodName };//{mDimension};
     mFunction = std::make_shared<TPythonModuleWrapper>(mPyFilePath, param, functionScriptName, functionClassName);
     mDimension = mFunction->GetDimension();
 
@@ -58,6 +58,11 @@ int iOptProblem::Initialize()
   }
   else
     return IGlobalOptimizationProblem::PROBLEM_ERROR;
+}
+
+int iOptProblem::GetNumberOfDiscreteVariable() const 
+{
+    return mFunction->GetDescreteParameters().size();
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -114,13 +119,13 @@ int iOptProblem::GetNumberOfCriterions() const
 // ------------------------------------------------------------------------------------------------
 double iOptProblem::CalculateFunctionals(const std::vector<double>& y, std::vector<std::string>& u, int fNumber)
 {
-  return mFunction->EvaluateFunction(y, fNumber);
+  return mFunction->EvaluateFunction(y, u, fNumber);
 }
 
 // ------------------------------------------------------------------------------------------------
 inline std::vector<double> iOptProblem::CalculateAllFunctionals(const std::vector<double>& y, std::vector<std::string>& u)
 {
-  return mFunction->EvaluateAllFunction(y);
+  return mFunction->EvaluateAllFunction(y, u);
 }
 
 inline int iOptProblem::GetStartTrial(std::vector<double>& y, std::vector<std::string>& u, std::vector<double>& values)
@@ -130,6 +135,12 @@ inline int iOptProblem::GetStartTrial(std::vector<double>& y, std::vector<std::s
     return mFunction->GetStartTrial(y, u, values);
   }
   return IGlobalOptimizationProblem::PROBLEM_ERROR;
+}
+
+inline int iOptProblem::GetDiscreteVariableValues(std::vector< std::vector<std::string>>& values) const
+{
+    values = mFunction->GetDescreteParameters();
+    return IGlobalOptimizationProblem::PROBLEM_OK;
 }
 
 
@@ -147,6 +158,13 @@ inline int iOptProblem::SetParameter(std::string name, std::string value)
 
   else   if (name == "functionClassName")
     functionClassName = value;
+
+  else   if (name == "DataSet")
+      datasetName = value;
+
+  else   if (name == "Method")
+      methodName = value;
+
 
   return IGlobalOptimizationProblem::PROBLEM_OK;
 }
@@ -180,6 +198,12 @@ inline void iOptProblem::GetParameters(std::vector<std::string>& names, std::vec
 
   names[3] = "functionClassName";
   values[3] = functionClassName;
+
+  names[4] = "DataSet";
+  values[4] = datasetName;
+
+  names[5] = "Method";
+  values[5] = methodName;
 
 }
 

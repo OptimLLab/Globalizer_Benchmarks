@@ -41,8 +41,9 @@ NAME_TO_DATASET = {
 
 METHOD_TO_HYPERPARAMS = {
     SVC: {
-        'gamma': Numerical('float', 1e-9, 1e-6, is_log_scale=False),#
-        'C': Numerical('int', 1, 1e10, is_log_scale=False)#
+        'gamma': Numerical('float', 1e-9, 1e-6, is_log_scale=True),
+        'C': Numerical('int', 1, 1e10, is_log_scale=True),
+        'kernel': Categorial('poly', 'rbf', 'sigmoid')
     },
 
     XGBClassifier: {
@@ -52,11 +53,14 @@ METHOD_TO_HYPERPARAMS = {
         'gamma': Numerical('float', 0.01, 0.6),
         'subsample': Numerical('float', 0.05, 0.95),
         'colsample_bytree': Numerical('float', 0.05, 0.95),
-        'learning_rate': Numerical('float', 0.001, 0.1, is_log_scale=False)
+        'learning_rate': Numerical('float', 0.001, 0.1, is_log_scale=True)
     },
 
     MLPClassifier: {
-        'alpha': Numerical('float', 1e-9, 1e-1, is_log_scale=False)
+        'hidden_layer_sizes': Numerical('int', 2, 150),
+        'activation': Categorial('identity', 'logistic', 'tanh', 'relu'),
+        'solver': Categorial('lbfgs', 'sgd', 'adam'),
+        'alpha': Numerical('float', 1e-9, 1e-1, is_log_scale=True)
     }
 }
 
@@ -147,6 +151,8 @@ class TestsProblem(Problem):
         custom_point = self.searcher._calculate_metric(arguments)
 
         function_value.value = -custom_point.value
+
+        print("Arguments: ", arguments, " Value: ", -custom_point.value)
         return function_value
 
     def __get_argument_dict(self, point):

@@ -22,6 +22,11 @@ protected:
   /// Инициализирована ли задача
   bool mIsInitialized;
 
+  /// Имя скрипта с задачей iOpt
+  std::string datasetName;
+  /// Имя скрипта с задачей iOpt
+  std::string methodName;
+
   /// Интерфейс для подключения задач на языке python
   std::shared_ptr<TPythonModuleWrapper> mFunction;
   /// Путь до python в linux
@@ -129,6 +134,14 @@ public:
   \return Код ошибки (#PROBLEM_OK или #UNDEFINED)
   */
   virtual void GetParameters(std::vector<std::string>& names, std::vector<std::string>& values);
+
+  /// Метод возвращает число дискретных параметров, дискретные параметры всегда последние в векторе y
+  virtual int GetNumberOfDiscreteVariable() const;
+
+  /** Метод возвращает число целочисленных переменных
+  \return Число целочисленных переменных
+  */
+  int GetDiscreteVariableValues(std::vector< std::vector<std::string>>& values) const;
 
   ~iOptProblem();
 };

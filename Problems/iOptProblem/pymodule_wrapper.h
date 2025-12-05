@@ -32,6 +32,9 @@ protected:
   /// Размерность задачи
   int mDimension;
 
+  /// Список дискретных параметров
+  std::vector<std::vector<std::string>> discreteParams;
+
   /// Верхняя граница области поиска
   std::vector<double> mUpperBound;
   /// Нижняя граница области поиска
@@ -77,13 +80,13 @@ public:
   #GetNumberOfFunctions() - 1 -- последнему критерию
   \return Значение функции с указанным номером
   */
-  double EvaluateFunction(const std::vector<double>& y, int fNumber) const;
+  double EvaluateFunction(const std::vector<double>& y, const std::vector<std::string>& categorys, int fNumber) const;
   /** Метод, вычисляющий все функции задачи
 
   \param[in] y непрерывные координаты точки, в которой необходимо вычислить значение
   \return Значение функций
   */
-  std::vector<double> EvaluateAllFunction(const std::vector<double>& y) const;
+  std::vector<double> EvaluateAllFunction(const std::vector<double>& y, const std::vector<std::string>& categorys) const;
 
   /** Метод возвращает число общее функций в задаче (оно равно число ограничений + число критериев)
   \return Число функций
@@ -98,6 +101,10 @@ public:
   */
   virtual int GetNumberOfCriterions() const;
 
+  /** Метод возвращает список дискретных параметров
+    \return вектор дискретных параметров
+    */
+  virtual std::vector<std::vector<std::string>> GetDescreteParameters();
 
   /** ћетод возвращает точку из допустимой области
   \param[out] y непрерывные координаты точки
