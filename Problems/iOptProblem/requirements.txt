@@ -51,3 +51,4 @@ urllib3==2.5.0
 wfdb==4.3.0
 xgboost==3.1.0
 yarl==1.22.0
+arff==0.9

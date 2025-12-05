@@ -1,5 +1,6 @@
 from typing import List
 import Cardio2D
+from TestsProblem import TestsProblem
 from rastrigin import Rastrigin
 from trial import Point
 from trial import FunctionValue
@@ -57,19 +58,21 @@ class GlobalizerProblem:
         self.result : FunctionValue = FunctionValue()
         self.result_value = 0.0
 
-        self.set_dimension(self.dimension)
+        #self.set_dimension(self.dimension)
 
-    def calculate(self, coordinate: List[float], fNumber: int = 0) -> float:
+    def calculate(self, coordinate: List[float], discreteCoordinate: List[str], fNumber: int = 0) -> float:
         self.current_coordinate = coordinate
         self.point.float_variables = np.array(self.current_coordinate)
+        self.point.discrete_variables = np.array(discreteCoordinate)
         self.function_value.functionID = fNumber
         self.result = self.problem.calculate(self.point, self.function_value)
         self.result_value = float(self.result.value)
         return self.result_value
 
-    def calculate_all_functionals(self, coordinate: List[float]) -> List[float]:
+    def calculate_all_functionals(self, coordinate: List[float], discreteCoordinate: List[str]) -> List[float]:
         self.current_coordinate = coordinate
         self.point.float_variables = np.array(self.current_coordinate)
+        self.point.discrete_variables = np.array(discreteCoordinate)
         self.function_value.functionID = 0
         self.result = self.problem.calculate(self.point, self.function_value)
         self.result_value = float(self.result.value)
@@ -88,10 +91,12 @@ class GlobalizerProblem:
         return 1
 
     def get_start_y(self) -> List[float]:
-        return [0.5] * self.dimension
+        start_y = [(lb + ub) * 0.5 for lb, ub in
+                   zip(self.problem.lower_bound_of_float_variables, self.problem.upper_bound_of_float_variables)]
+        return start_y
 
     def get_start_value(self) -> List[float]:
-        return [self.calculate(self.get_start_y(), 0)]
+        return [self.calculate(self.get_start_y(), [self.get_discrete_params()[0][0]] ,0)]
 
     def get_lower_bounds(self) -> List[float]:
         res = self.problem.lower_bound_of_float_variables
@@ -101,14 +106,22 @@ class GlobalizerProblem:
         res = self.problem.upper_bound_of_float_variables
         return res
 
+    def get_discrete_params(self) -> List[List[str]]:
+        res = self.problem.discrete_variable_values
+        for i in range(len(res)):
+            res[i] = list(res[i])
+        return res
+
     def set_dimension(self, dimension: int):
-        self.dimension = dimension
-        #self.problem: Problem = Rastrigin(dimension=dimension)
-        self.current_coordinate = [0] * dimension
-        self.point: Point = Point(float_variables=np.array(self.current_coordinate), discrete_variables=None)
-        self.function_value: FunctionValue = FunctionValue()
-        self.result = self.problem.calculate(self.point, self.function_value)
-        self.result_value = float(self.result.value)
+        pass
+    #     self.dimension = dimension
+    #     #self.problem: Problem = Rastrigin(dimension=dimension)
+    #     self.current_coordinate = [0] * dimension
+    #     self.point: Point = Point(float_variables=np.array(self.current_coordinate), discrete_variables=None)
+    #     self.function_value: FunctionValue = FunctionValue()
+    #     #self.result = self.problem.calculate(self.point, self.function_value)
+    #     #self.result_value = float(self.result.value)
+
 
 
 def load_breast_cancer_data():
@@ -174,8 +187,22 @@ def test_rastrigin():
     resultAllFunction = problem.calculate_all_functionals([0.5] * problem.get_dimension())
     print(resultAllFunction)
 
+def TestsProblemTest():
+    problem_ecg_class = TestsProblem('balance', 'svc')
+
+    problem = GlobalizerProblem(problem_ecg_class)
+    des = problem.get_discrete_params()
+    sp = problem.get_start_value()
+
+
+    result = problem.calculate([1e-7, 1e2], ['rbf'])
+    print(result)
+
+
+
 if __name__ == "__main__":
-    test_ecg_classification_problem()
+    TestsProblemTest()
+    #test_ecg_classification_problem()
     #test_svc1d_problem()
     #test_segmentation_problem()
     #test_rastrigin()
