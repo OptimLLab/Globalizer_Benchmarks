@@ -16,7 +16,7 @@ import hashlib
 import numpy as np
 import shutil
 from ECGClassificationProblem import ECGClassificationProblem
-
+from SVC_3D_Transformator import SVC_3D
 
 def _get_hash(path: Path) -> str:
     file_hash = hashlib.sha256()
@@ -198,10 +198,22 @@ def TestsProblemTest():
     result = problem.calculate([1e-7, 1e2], ['rbf'])
     print(result)
 
+def TestSVC3D():
+    problem_transformator = SVC_3D()
+
+    problem = GlobalizerProblem(problem_transformator)
+
+    des = problem.get_discrete_params()
+    sp = problem.get_start_value()
+
+    result = problem.calculate([6.0, -2.0], ['rbf'])
+    print(result)
+
 
 
 if __name__ == "__main__":
-    TestsProblemTest()
+    TestSVC3D()
+    #TestsProblemTest()
     #test_ecg_classification_problem()
     #test_svc1d_problem()
     #test_segmentation_problem()
