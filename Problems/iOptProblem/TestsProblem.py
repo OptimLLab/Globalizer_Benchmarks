@@ -148,6 +148,8 @@ class TestsProblem(Problem):
     def calculate(self, point: Point, function_value: FunctionValue) -> FunctionValue:
         arguments = self.__get_argument_dict(point)
 
+        print("Arguments: ", arguments)
+
         custom_point = self.searcher._calculate_metric(arguments)
 
         function_value.value = -custom_point.value

@@ -13,7 +13,7 @@ import torch.nn as nn
 import os
 
 def train(model, train_loader, test_loader, epochs=10, lr=1e-3):
-    device = torch.device("cpu")#("cuda" if torch.cuda.is_available() else "cpu")
+    device = torch.device("cuda")# if torch.cuda.is_available() else "cpu")
     model = model.to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
     criterion = nn.CrossEntropyLoss()
