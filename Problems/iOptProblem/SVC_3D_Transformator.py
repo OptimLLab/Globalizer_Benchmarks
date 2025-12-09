@@ -8,11 +8,17 @@ from typing import Dict, List
 from sklearn.utils import shuffle
 import csv
 from sklearn.model_selection import StratifiedKFold
+from pathlib import Path
+from urllib.parse import urlencode
+import requests
+import zipfile
+import os
 
 def factory_dataset():
+    downloadTransformatorsDataset()
     x = []
     y = []
-    with open(r"Datasets/transformator_state.csv") as rrrr_file:
+    with open(r"datasets/transformator_state.csv") as rrrr_file:
         file_reader = csv.reader(rrrr_file, delimiter=",")
         for row in file_reader:
             x_row = []
@@ -22,11 +28,30 @@ def factory_dataset():
             y.append(row[len(row)-1])
     return shuffle(np.array(x), np.array(y), random_state=42)
 
+
+def downloadTransformatorsDataset():
+    path = Path(__file__).parent
+
+    base_url = 'https://cloud-api.yandex.net/v1/disk/public/resources/download?'
+    public_key = 'https://disk.yandex.ru/d/X_YlA0dJ-OsI8g'
+
+    final_url = base_url + urlencode(dict(public_key=public_key))
+    response = requests.get(final_url)
+    download_url = response.json()['href']
+
+    download_response = requests.get(download_url)
+    with open(path / 'datasets.zip', 'wb') as f:
+        f.write(download_response.content)
+
+    with zipfile.ZipFile(path / 'datasets.zip') as f:
+        f.extractall(path=path)
+
+    os.remove(path / 'datasets.zip')
+
 class SVC_3D(Problem):
     def __init__(self):
 
         super(SVC_3D, self).__init__()
-
         x_dataset, y_dataset = factory_dataset()
 
         self.dimension = 3
