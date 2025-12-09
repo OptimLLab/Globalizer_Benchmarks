@@ -15,10 +15,11 @@ import zipfile
 import os
 
 def factory_dataset():
+    path = Path(__file__).parent
     downloadTransformatorsDataset()
     x = []
     y = []
-    with open(r"datasets/transformator_state.csv") as rrrr_file:
+    with open(path / 'datasets' / 'transformator_state.csv') as rrrr_file:
         file_reader = csv.reader(rrrr_file, delimiter=",")
         for row in file_reader:
             x_row = []
@@ -67,7 +68,7 @@ class SVC_3D(Problem):
         self.lower_bound_of_float_variables = [5.0, -3.0]
         self.upper_bound_of_float_variables = [9.0, 1.0]
         self.discrete_variable_names.append('kernel')
-        self.discrete_variable_values.append(['rbf', 'sigmoid', 'poly'])
+        self.discrete_variable_values.append(('sigmoid', 'rbf', 'poly'))
         self.cv = StratifiedKFold(shuffle=True, random_state=42)
 
 
