@@ -73,6 +73,14 @@ public:
   */
   virtual double CalculateFunctionals(const std::vector<double>& x, std::vector<std::string>& u, int fNumber);
 
+  /** ћетод возвращает точку из допустимой области
+  \param[out] y непрерывные координаты точки
+  \param[out] u целочисленые координаты точки
+  \param[out] values значение в этой точке
+  \return  од ошибки (#PROBLEM_OK или #UNDEFINED)
+  */
+  virtual int GetStartTrial(std::vector<double>& y, std::vector<std::string>& u, std::vector<double>& values);
+
   ~RastriginProblem();
 };
 

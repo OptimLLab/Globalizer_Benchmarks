@@ -107,6 +107,24 @@ double RastriginProblem::CalculateFunctionals(const std::vector<double>& x, std:
   return sum;
 }
 
+inline int RastriginProblem::GetStartTrial(std::vector<double>& y, std::vector<std::string>& u, std::vector<double>& values)
+{
+  if (mIsInitialized)
+  {
+    y.resize(mDimension);
+    u.resize(0);
+    std::vector<double>lower;
+    std::vector<double> upper;
+    GetBounds(lower, upper);
+    for (int j = 0; j < mDimension; j++)
+      y[j] = (lower[j] + upper[j]) / 2.0;
+
+    values = std::vector<double>(1, CalculateFunctionals(y, u, 0));
+    return IGlobalOptimizationProblem::PROBLEM_OK;
+  }
+  return IGlobalOptimizationProblem::PROBLEM_ERROR;
+}
+
 // ------------------------------------------------------------------------------------------------
 RastriginProblem::~RastriginProblem()
 {
