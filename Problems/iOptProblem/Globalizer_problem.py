@@ -96,7 +96,9 @@ class GlobalizerProblem:
         return start_y
 
     def get_start_value(self) -> List[float]:
-        return [self.calculate(self.get_start_y(), [self.get_discrete_params()[0][0]] ,0)]
+        discrete_params = self.get_discrete_params()
+        u = [i[0] for i in discrete_params]
+        return [self.calculate(self.get_start_y(), u ,0)]
 
     def get_lower_bounds(self) -> List[float]:
         res = self.problem.lower_bound_of_float_variables
@@ -122,6 +124,12 @@ class GlobalizerProblem:
     #     #self.result = self.problem.calculate(self.point, self.function_value)
     #     #self.result_value = float(self.result.value)
 
+def get_problem_parameters_names(class_name: str)->List[str]:
+    if class_name == 'Rastrigin':
+        return ["Dimension"]
+    if class_name == 'TestsProblem':
+        return ["DataSet", "Method"]
+    return []
 
 
 def load_breast_cancer_data():
@@ -137,9 +145,9 @@ def test_ecg_classification_problem():
 
     bound = problem.get_lower_bounds()
     print(bound)
-    result = problem.calculate([0.5, 100], 0)
+    result = problem.calculate([0.5, 100], [], 0)
     print(result)
-    result_all_function = problem.calculate_all_functionals([0.5, 100])
+    result_all_function = problem.calculate_all_functionals([0.5, 100], [])
     print(result_all_function)
 
 def test_svc1d_problem():
@@ -152,9 +160,9 @@ def test_svc1d_problem():
 
     bound = problem.get_lower_bounds()
     print(bound)
-    result = problem.calculate([2], 0)
+    result = problem.calculate([2], [], 0)
     print(result)
-    result_all_function = problem.calculate_all_functionals([2])
+    result_all_function = problem.calculate_all_functionals([2], [])
     print(result_all_function)
 
 def test_segmentation_problem():
@@ -172,19 +180,20 @@ def test_segmentation_problem():
 
     bound = problem.get_lower_bounds()
     print(bound)
-    result = problem.calculate([0.5, 1.3], 0)
+    result = problem.calculate([0.5, 1.3], [], 0)
     print(result)
-    result_all_function = problem.calculate_all_functionals([0.5, 1.3])
+    result_all_function = problem.calculate_all_functionals([0.5, 1.3], [])
     print(result_all_function)
 
 def test_rastrigin():
-    r_problem = Rastrigin(5)
+    r_problem = Rastrigin(3)
     problem = GlobalizerProblem(r_problem)
     bound = problem.get_lower_bounds()
     print(bound)
-    result = problem.calculate([0.5] * problem.get_dimension(), 0)
+    result = problem.calculate([0.5] * problem.get_dimension(), [],0)
+    sp = problem.get_start_value()
     print(result)
-    resultAllFunction = problem.calculate_all_functionals([0.5] * problem.get_dimension())
+    resultAllFunction = problem.calculate_all_functionals([0.5] * problem.get_dimension(), [])
     print(resultAllFunction)
 
 def TestsProblemTest():
@@ -212,9 +221,9 @@ def TestSVC3D():
 
 
 if __name__ == "__main__":
-    TestSVC3D()
+    #TestSVC3D()
     #TestsProblemTest()
     #test_ecg_classification_problem()
     #test_svc1d_problem()
     #test_segmentation_problem()
-    #test_rastrigin()
+    test_rastrigin()

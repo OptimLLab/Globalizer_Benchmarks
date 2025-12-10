@@ -49,13 +49,16 @@ protected:
   /// Задача из iOpt
   PyObject* funcClass;
 
+  PyThreadState* main_ts;
+
   
   /// <summary>
   /// Создает параметры для создания объекта задачи iOpt
   /// </summary>
   /// <param name="param"></param>
   /// <returns></returns>
-  PyObject* VectorToTuple(std::vector<IOptVariantType> param);
+  PyObject* VectorToTuple(std::vector<IOptVariantType> param,
+    std::vector<std::string> paramName, std::vector<std::string> mProblemParametersNames);
 
 public:
   /// <summary>
@@ -65,7 +68,8 @@ public:
   /// <param name="param"> вектор параметров для создания задачи</param>
   /// <param name="functionScriptName">имя скрипта с задачей iOpt</param>
   /// <param name="functionClassName">имя класса с задачей iOpt</param>
-  TPythonModuleWrapper(const std::string& module_path, std::vector<IOptVariantType> param = { 2 },
+  TPythonModuleWrapper(const std::string& module_path, std::vector<IOptVariantType> param = {}, 
+    std::vector<std::string> paramName = {},
     std::string functionScriptName = "rastrigin", std::string functionClassName= "Rastrigin");
 
   /// Возвращает размерность задачи, можно вызывать после #Initialize

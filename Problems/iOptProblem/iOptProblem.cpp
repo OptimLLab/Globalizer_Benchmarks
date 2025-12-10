@@ -49,8 +49,11 @@ int iOptProblem::Initialize()
 #ifndef WIN32
     mLibpython_handle = dlopen("/home/lebedev_i/miniconda3/lib/libpython3.9.so", RTLD_LAZY | RTLD_GLOBAL);
 #endif
-    std::vector<IOptVariantType> param = { datasetName, methodName };//{mDimension};
-    mFunction = std::make_shared<TPythonModuleWrapper>(mPyFilePath, param, functionScriptName, functionClassName);
+
+    GetParameters(problemParametersNames, problemParametersStringValues);
+
+    mFunction = std::make_shared<TPythonModuleWrapper>(mPyFilePath, problemParametersValues, 
+      problemParametersNames, functionScriptName, functionClassName);
     mDimension = mFunction->GetDimension();
 
     mIsInitialized = true;
@@ -184,27 +187,36 @@ inline int iOptProblem::SetParameter(std::string name, void* value)
 // ------------------------------------------------------------------------------------------------
 inline void iOptProblem::GetParameters(std::vector<std::string>& names, std::vector<std::string>& values)
 {
-  names.resize(4);
-  values.resize(4);
+  problemParametersNames.clear();
+  problemParametersStringValues.clear();
+  problemParametersValues.clear();
 
-  names[0] = "Dimension";
-  values[0] = std::to_string(mDimension);
+  problemParametersNames.push_back("Dimension");
+  problemParametersStringValues.push_back(std::to_string(mDimension));
+  problemParametersValues.push_back(mDimension);
 
-  names[1] = "mPyFilePath";
-  values[1] = mPyFilePath;
+  problemParametersNames.push_back("mPyFilePath");
+  problemParametersStringValues.push_back(mPyFilePath);
+  problemParametersValues.push_back(mPyFilePath);
 
-  names[2] = "functionScriptName";
-  values[2] = functionScriptName;
+  problemParametersNames.push_back("functionScriptName");
+  problemParametersStringValues.push_back(functionScriptName);
+  problemParametersValues.push_back(functionScriptName);
 
-  names[3] = "functionClassName";
-  values[3] = functionClassName;
+  problemParametersNames.push_back("functionClassName");
+  problemParametersStringValues.push_back(functionClassName);
+  problemParametersValues.push_back(functionClassName);
 
-  names[4] = "DataSet";
-  values[4] = datasetName;
+  problemParametersNames.push_back("DataSet");
+  problemParametersStringValues.push_back(datasetName);
+  problemParametersValues.push_back(datasetName);
 
-  names[5] = "Method";
-  values[5] = methodName;
+  problemParametersNames.push_back("Method");
+  problemParametersStringValues.push_back(methodName);
+  problemParametersValues.push_back(methodName);
 
+  names = problemParametersNames;
+  values = problemParametersStringValues;
 }
 
 // ------------------------------------------------------------------------------------------------

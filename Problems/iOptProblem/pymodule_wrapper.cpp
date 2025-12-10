@@ -2,6 +2,7 @@
 
 #include <stdexcept>
 #include <iostream>
+#include <omp.h>
 
 using namespace std;
 
@@ -164,28 +165,70 @@ std::vector<double> py_list_to_vector_double(PyObject* list_obj)
 
 // ------------------------------------------------------------------------------------------------
 /// <summary>
+/// Создает вектор string по python list
+/// </summary>
+/// <param name="list_obj">
+/// Создает вектор string по python list</param>
+/// <returns> вектор string</returns>
+std::vector<std::string> py_list_to_vector_string(PyObject* py_list) 
+{
+  std::vector<std::string> result;
+
+  if (!PyList_Check(py_list)) 
+  {
+    return result;
+  }
+
+  Py_ssize_t size = PyList_Size(py_list);
+  result.reserve(size);
+
+  for (Py_ssize_t i = 0; i < size; ++i) 
+  {
+    PyObject* py_str = PyList_GetItem(py_list, i);
+    if (PyUnicode_Check(py_str)) 
+    {
+      const char* str = PyUnicode_AsUTF8(py_str);
+      if (str) 
+      {
+        result.push_back(std::string(str));
+      }
+    }
+  }
+
+  return result;
+}
+
+// ------------------------------------------------------------------------------------------------
+/// <summary>
 /// Создает параметры для создания объекта класа
 /// </summary>
 /// <param name="param"></param>
 /// <returns></returns>
-PyObject* TPythonModuleWrapper::VectorToTuple(std::vector<IOptVariantType> param)
+PyObject* TPythonModuleWrapper::VectorToTuple(std::vector<IOptVariantType> param, 
+  std::vector<std::string> paramName, std::vector<std::string> mProblemParametersNames)
 {
 
-  std::vector<PyObject*> vec(param.size());
-  for (int i = 0; i < param.size(); i++)
+  std::vector<PyObject*> vec;
+  for (auto parName : mProblemParametersNames)
   {
-    if (param[i].index() == 0)//int
-      vec[i] = PyLong_FromLong(std::get<0>(param[i]));
-    else if (param[i].index() == 1) //double
-      vec[i] = PyFloat_FromDouble(std::get<1>(param[i]));
-    else if (param[i].index() == 2) //string
-      vec[i] = PyUnicode_FromString(std::get<2>(param[i]).c_str());
+    for (int i = 0; i < param.size(); i++)
+    {
+      if (parName == paramName[i])
+      {
+        if (param[i].index() == 0)//int
+          vec.push_back(PyLong_FromLong(std::get<0>(param[i])));
+        else if (param[i].index() == 1) //double
+          vec.push_back(PyFloat_FromDouble(std::get<1>(param[i])));
+        else if (param[i].index() == 2) //string
+          vec.push_back(PyUnicode_FromString(std::get<2>(param[i]).c_str()));
+      }
+    }
   }
-
   PyObject* tuple = PyTuple_New(vec.size());
   if (!tuple) return nullptr;
 
-  for (size_t i = 0; i < vec.size(); ++i) {
+  for (size_t i = 0; i < vec.size(); ++i) 
+  {
     PyObject* item = vec[i];
     Py_INCREF(item); // Увеличиваем счетчик ссылок
     PyTuple_SET_ITEM(tuple, i, item);
@@ -196,12 +239,19 @@ PyObject* TPythonModuleWrapper::VectorToTuple(std::vector<IOptVariantType> param
 
 // ------------------------------------------------------------------------------------------------
 TPythonModuleWrapper::TPythonModuleWrapper(const std::string& module_path, std::vector<IOptVariantType> param,
-  std::string functionScriptName, std::string functionClassName)
+  std::vector<std::string> paramName, std::string functionScriptName, std::string functionClassName)
 {
   setenv("PYTHONPATH", module_path.c_str(), true);
   Py_Initialize();
 
   PyErr_Print();
+  PyEval_InitThreads();
+  
+  PyErr_Print();
+
+  printf("Thread %d: Py_IsInitialized = %d\n",
+    omp_get_thread_num(), Py_IsInitialized());
+
 
   ///////////////////////////////////////////////////////
   auto funcModule = PyImport_ImportModule(functionScriptName.c_str());
@@ -212,9 +262,18 @@ TPythonModuleWrapper::TPythonModuleWrapper(const std::string& module_path, std::
   }
   assert(funcModule != nullptr);
 
+  ///////////////////////////////////////////////////////
+  pModule = PyImport_ImportModule("Globalizer_problem");
+  if (pModule == nullptr)
+  {
+    PyErr_Print();
+    std::exit(1);
+  }
+  assert(pModule != nullptr);
+
   // Получаем класс из модуля
   funcClass = PyObject_GetAttrString(funcModule, functionClassName.c_str());
-  if (!pClass || !PyCallable_Check(funcClass))
+  if (!funcClass || !PyCallable_Check(funcClass))
   {
     PyErr_Print();
     std::cerr << "Cannot find class" << std::endl;
@@ -222,9 +281,26 @@ TPythonModuleWrapper::TPythonModuleWrapper(const std::string& module_path, std::
     std::exit(1);
   }
 
+  // Получаем список параметров задачи из модуля
+  PyObject* pArgs = Py_BuildValue("(s)", functionClassName.c_str());
+  PyObject* pResultNames = PyObject_CallMethod(pModule, "get_problem_parameters_names", "O", pArgs);
+  std::vector<std::string> mProblemParametersNames;
+  if (pResultNames) 
+  {
+    mProblemParametersNames = py_list_to_vector_string(pResultNames);
+    Py_DECREF(pResultNames);
+  }
+  else 
+  {
+    PyErr_Print();
+  }
 
+  if (pArgs) 
+  {
+    Py_DECREF(pArgs);
+  }
 
-  auto arglist = VectorToTuple(param);
+  auto arglist = VectorToTuple(param, paramName, mProblemParametersNames);
   // Создаем экземпляр класса
   auto funcInstance = PyObject_CallObject(funcClass, arglist);
   if (!funcInstance)
@@ -250,14 +326,7 @@ TPythonModuleWrapper::TPythonModuleWrapper(const std::string& module_path, std::
   ///////////////////////////////////////////////////////
 
 
-  ///////////////////////////////////////////////////////
-  pModule = PyImport_ImportModule("Globalizer_problem");
-  if (pModule == nullptr)
-  {
-    PyErr_Print();
-    std::exit(1);
-  }
-  assert(pModule != nullptr);
+
 
   // Получаем класс из модуля
   pClass = PyObject_GetAttrString(pModule, "GlobalizerProblem");
@@ -311,7 +380,10 @@ TPythonModuleWrapper::TPythonModuleWrapper(const std::string& module_path, std::
   else
       PyErr_Print();
 
-
+  main_ts = PyEval_SaveThread();  // Освобождаем GIL в каждом потоке
+  PyGILState_STATE gstate = PyGILState_Ensure();
+  PyErr_Print();
+  PyGILState_Release(gstate);
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -324,10 +396,19 @@ int TPythonModuleWrapper::GetDimension() const
 double TPythonModuleWrapper::EvaluateFunction(const std::vector<double>& y, const std::vector<std::string>& categorys, int fNumber) const
 {
   double retval = 0;
+  int dim = mDimension - discreteParams.size();
+
 #pragma omp critical
   {
+    PyGILState_STATE gstate = PyGILState_Ensure();
 
-    auto py_arg1 = makeFloatList(y.data(), mDimension - discreteParams.size());
+
+    PyObject* py_arg1 = PyList_New(dim);
+    for (int i = 0; i != dim; i++)
+      PyList_SET_ITEM(py_arg1, i, PyFloat_FromDouble(y[i]));
+
+
+    //auto py_arg1 = makeFloatList(y.data(), dim);
     auto py_arg2 = makeStrList(categorys);
     auto py_arg3 = PyLong_FromLong(fNumber);
 
@@ -341,6 +422,8 @@ double TPythonModuleWrapper::EvaluateFunction(const std::vector<double>& y, cons
     Py_DECREF(py_arg3);
     Py_DECREF(arglist);
     Py_DECREF(result);
+
+    PyGILState_Release(gstate);
   }
   return retval;
 }
@@ -352,7 +435,7 @@ std::vector<double> TPythonModuleWrapper::EvaluateAllFunction(const std::vector<
   std::vector<double> retval;
 #pragma omp critical
   {
-
+    PyGILState_STATE gstate = PyGILState_Ensure();
     auto py_arg1 = makeFloatList(y.data(), mDimension);
     auto py_arg2 = makeStrList(categorys);
 
@@ -365,6 +448,7 @@ std::vector<double> TPythonModuleWrapper::EvaluateAllFunction(const std::vector<
     Py_DECREF(py_arg2);
     Py_DECREF(arglist);
     Py_DECREF(result);
+    PyGILState_Release(gstate);
   }
   return retval;
 }
@@ -373,9 +457,12 @@ std::vector<double> TPythonModuleWrapper::EvaluateAllFunction(const std::vector<
 TPythonModuleWrapper::~TPythonModuleWrapper()
 {
   // Очистка
+  PyGILState_STATE gstate = PyGILState_Ensure();
   Py_DECREF(pInstance);
   Py_DECREF(pClass);
   Py_DECREF(pModule);
+  PyGILState_Release(gstate);
+  PyEval_RestoreThread(main_ts);
   Py_Finalize();
 }
 
@@ -393,6 +480,7 @@ void TPythonModuleWrapper::GetBounds(std::vector<double>& lower, std::vector<dou
 // ------------------------------------------------------------------------------------------------
 int TPythonModuleWrapper::GetNumberOfFunctions() const
 {
+  PyGILState_STATE gstate = PyGILState_Ensure();
   try
   {
     PyObject* pNumberOfFunctions = PyObject_CallMethod(pInstance, "get_number_of_functions", NULL);
@@ -401,10 +489,12 @@ int TPythonModuleWrapper::GetNumberOfFunctions() const
       int numberOfFunctions = PyLong_AsLong(pNumberOfFunctions);
 
       Py_DECREF(pNumberOfFunctions);
+      PyGILState_Release(gstate);
       return numberOfFunctions;
     }
     else
     {
+      PyGILState_Release(gstate);
       PyErr_Print();
       return 1;
     }
@@ -414,11 +504,13 @@ int TPythonModuleWrapper::GetNumberOfFunctions() const
   {
     return 1;
   }
+
 }
 
 // ------------------------------------------------------------------------------------------------
 int TPythonModuleWrapper::GetNumberOfConstraints() const
 {
+  PyGILState_STATE gstate = PyGILState_Ensure();
   try
   {
     PyObject* pNumberOfConstraints = PyObject_CallMethod(pInstance, "get_number_of_constraints", NULL);
@@ -427,10 +519,12 @@ int TPythonModuleWrapper::GetNumberOfConstraints() const
       int numberOfConstraints = PyLong_AsLong(pNumberOfConstraints);
 
       Py_DECREF(pNumberOfConstraints);
+      PyGILState_Release(gstate);
       return numberOfConstraints;
     }
     else
     {
+      PyGILState_Release(gstate);
       PyErr_Print();
       return 1;
     }
@@ -440,11 +534,13 @@ int TPythonModuleWrapper::GetNumberOfConstraints() const
   {
     return 1;
   }
+
 }
 
 // ------------------------------------------------------------------------------------------------
 int TPythonModuleWrapper::GetNumberOfCriterions() const
 {
+  PyGILState_STATE gstate = PyGILState_Ensure();
   try
   {
     PyObject* pNumberOfCriterions = PyObject_CallMethod(pInstance, "get_number_of_criterions", NULL);
@@ -453,11 +549,14 @@ int TPythonModuleWrapper::GetNumberOfCriterions() const
       int numberOfCriterions = PyLong_AsLong(pNumberOfCriterions);
 
       Py_DECREF(pNumberOfCriterions);
+      PyGILState_Release(gstate);
       return numberOfCriterions;
     }
     else
     {
+
       PyErr_Print();
+      PyGILState_Release(gstate);
       return 1;
     }
 
@@ -466,6 +565,7 @@ int TPythonModuleWrapper::GetNumberOfCriterions() const
   {
     return 1;
   }
+  
 }
 
 std::vector<std::vector<std::string>> TPythonModuleWrapper::GetDescreteParameters()
@@ -476,6 +576,7 @@ std::vector<std::vector<std::string>> TPythonModuleWrapper::GetDescreteParameter
 // ------------------------------------------------------------------------------------------------
 inline int TPythonModuleWrapper::GetStartTrial(std::vector<double>& y, std::vector<std::string>& u, std::vector<double>& values)
 {
+  PyGILState_STATE gstate = PyGILState_Ensure();
   try
   {
 
@@ -483,7 +584,9 @@ inline int TPythonModuleWrapper::GetStartTrial(std::vector<double>& y, std::vect
     if (pStartY)
     {
       y = py_list_to_vector_double(pStartY);
-      u[0] = GetDescreteParameters()[0][0]; // !!!! Bad
+      u.resize(discreteParams.size());
+      for (int i = 0; i < discreteParams.size(); i++)
+        u[i] = GetDescreteParameters()[i][0];
       Py_DECREF(pStartY);
     }
     else
@@ -510,5 +613,6 @@ inline int TPythonModuleWrapper::GetStartTrial(std::vector<double>& y, std::vect
   {
     return -1;
   }
+  PyGILState_Release(gstate);
   return 0;
 }

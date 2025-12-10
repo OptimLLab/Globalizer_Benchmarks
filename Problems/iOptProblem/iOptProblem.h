@@ -32,6 +32,13 @@ protected:
   /// Путь до python в linux
   void* mLibpython_handle;
 
+  /// Имена параметров
+  std::vector<std::string> problemParametersNames;
+  /// Строковые значения параметров
+  std::vector<std::string> problemParametersStringValues;
+  /// Значения параметров
+  std::vector<IOptVariantType> problemParametersValues;
+
 public:
 
   iOptProblem();
