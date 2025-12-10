@@ -273,7 +273,7 @@ TPythonModuleWrapper::TPythonModuleWrapper(const std::string& module_path, std::
 
   // Получаем класс из модуля
   funcClass = PyObject_GetAttrString(funcModule, functionClassName.c_str());
-  if (!pClass || !PyCallable_Check(funcClass))
+  if (!funcClass || !PyCallable_Check(funcClass))
   {
     PyErr_Print();
     std::cerr << "Cannot find class" << std::endl;
