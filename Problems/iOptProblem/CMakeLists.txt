@@ -12,7 +12,7 @@ if(GLOBALIZER_BENCHMARKS_PYTHON_PATH)
   set(Python_ROOT_DIR "${VENV_PATH}")
  endif()
   
-find_package (Python REQUIRED COMPONENTS Interpreter Development NumPy)
+find_package (Python COMPONENTS Interpreter Development NumPy)
 
 set(EXTRA_DEFINES "")
 #if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
