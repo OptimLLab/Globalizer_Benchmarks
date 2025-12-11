@@ -76,5 +76,16 @@ class SVC_3D(Problem):
         cs, gammas = point.float_variables[0], point.float_variables[1]
         kernel_type = point.discrete_variables[0]
         clf = SVC(C=10 ** cs, gamma=10 ** gammas, kernel=kernel_type)
-        function_value.value = -cross_val_score(clf, self.x, self.y, cv=self.cv, scoring='f1_macro').mean()
+        function_value.value = 1-cross_val_score(clf, self.x, self.y, cv=self.cv, scoring='f1_macro').mean()
+        print("Arguments: C=\t", 10 ** cs, "\tgamma=\t", 10 ** gammas, "\tkernel=\t",
+              kernel_type, "\tValue:\t", function_value.value)
         return function_value
+
+    def default_calculate(self)-> float:
+        """
+        Метод расчёта значения целевой функции со значениями по умолчанию
+
+        """
+        clf = SVC()
+        value = 1-cross_val_score(clf, self.x, self.y, cv=self.cv, scoring='f1_macro').mean()
+        return value
