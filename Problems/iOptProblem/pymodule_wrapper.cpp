@@ -242,17 +242,15 @@ TPythonModuleWrapper::TPythonModuleWrapper(const std::string& module_path, std::
   std::vector<std::string> paramName, std::string functionScriptName, std::string functionClassName)
 {
   setenv("PYTHONPATH", module_path.c_str(), true);
-  Py_Initialize();
+  if (!Py_IsInitialized())
+  {
+    Py_Initialize();
 
-  PyErr_Print();
-  PyEval_InitThreads();
-  
-  PyErr_Print();
+    PyErr_Print();
+    PyEval_InitThreads();
 
-  printf("Thread %d: Py_IsInitialized = %d\n",
-    omp_get_thread_num(), Py_IsInitialized());
-
-
+    PyErr_Print();
+  }
   ///////////////////////////////////////////////////////
   auto funcModule = PyImport_ImportModule(functionScriptName.c_str());
   if (funcModule == nullptr)
@@ -324,8 +322,6 @@ TPythonModuleWrapper::TPythonModuleWrapper(const std::string& module_path, std::
   Py_INCREF(funcInstance); 
 
   ///////////////////////////////////////////////////////
-
-
 
 
   // Получаем класс из модуля
@@ -462,8 +458,12 @@ TPythonModuleWrapper::~TPythonModuleWrapper()
   Py_DECREF(pClass);
   Py_DECREF(pModule);
   PyGILState_Release(gstate);
-  PyEval_RestoreThread(main_ts);
-  Py_Finalize();
+
+  if (Py_IsInitialized())
+  {
+    PyEval_RestoreThread(main_ts);
+    Py_Finalize();
+  }
 }
 
 // ------------------------------------------------------------------------------------------------

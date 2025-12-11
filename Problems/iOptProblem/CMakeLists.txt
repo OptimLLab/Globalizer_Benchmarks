@@ -11,7 +11,7 @@ if(GLOBALIZER_BENCHMARKS_PYTHON_PATH)
   set(Python_EXECUTABLE "${VENV_PATH}/bin/python")
   set(Python_ROOT_DIR "${VENV_PATH}")
  endif()
-  
+  set(Python_FIND_DEBUG OFF)
 find_package (Python COMPONENTS Interpreter Development NumPy)
 
 set(EXTRA_DEFINES "")

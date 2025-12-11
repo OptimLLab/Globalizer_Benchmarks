@@ -1,3 +1,4 @@
+set(Python_FIND_DEBUG OFF)
 find_package (Python COMPONENTS Interpreter Development NumPy)
 
 set(EXTRA_DEFINES "")
