@@ -215,15 +215,17 @@ def TestSVC3D():
     des = problem.get_discrete_params()
     sp = problem.get_start_value()
 
-    result = problem.calculate([6.0, -2.0], ['rbf'])
-    print(result)
+    #result = problem.calculate([6.0, -2.0], ['rbf'])
+    #print("transformator SVC 3D in (6.0, -2.0, rbf) = " + str(result))
+    default_result = problem_transformator.default_calculate()
+    print("transformator SVC 3D default value = " + str(default_result))
 
 
 
 if __name__ == "__main__":
-    #TestSVC3D()
+    TestSVC3D()
     #TestsProblemTest()
     #test_ecg_classification_problem()
     #test_svc1d_problem()
     #test_segmentation_problem()
-    test_rastrigin()
+    #test_rastrigin()

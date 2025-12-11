@@ -59,3 +59,12 @@ class SVC_3D(Problem):
         clf = SVC(C=10 ** cs, gamma=10 ** gammas, kernel=kernel_type)
         function_value.value = -cross_val_score(clf, self.x, self.y, scoring='f1').mean()
         return function_value
+
+    def default_calculate(self)-> float:
+        """
+        Метод расчёта значения целевой функции со значениями по умолчанию
+
+        """
+        clf = SVC()
+        value = -cross_val_score(clf, self.x, self.y, scoring='f1').mean()
+        return value
