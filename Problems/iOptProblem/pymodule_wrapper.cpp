@@ -3,6 +3,7 @@
 #include <stdexcept>
 #include <iostream>
 #include <omp.h>
+#include <memory>
 
 using namespace std;
 
