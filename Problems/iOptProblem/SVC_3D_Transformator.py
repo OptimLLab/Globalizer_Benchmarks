@@ -15,8 +15,7 @@ import zipfile
 import os
 
 def factory_dataset():
-    path = Path(__file__).parent
-    downloadTransformatorsDataset()
+    path = Path(__file__).parent    
     x = []
     y = []
     with open(path / 'datasets' / 'transformator_state.csv') as rrrr_file:
@@ -89,3 +88,6 @@ class SVC_3D(Problem):
         clf = SVC()
         value = 1-cross_val_score(clf, self.x, self.y, cv=self.cv, scoring='f1_macro').mean()
         return value
+        
+if __name__ == '__main__':
+    downloadTransformatorsDataset()

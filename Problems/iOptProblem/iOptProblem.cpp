@@ -14,9 +14,7 @@ iOptProblem::iOptProblem()
   mIsInitialized = false;
   mDimension = 3;
 
-  const char* filename = __FILE__;
-  std::filesystem::path file_path(filename);
-  mPyFilePath = file_path.parent_path().string();
+  mPyFilePath = "";
 
   functionScriptName = "TestsProblem";
   functionClassName = "TestsProblem";
@@ -50,6 +48,12 @@ int iOptProblem::Initialize()
     mLibpython_handle = dlopen("/home/lebedev_i/miniconda3/lib/libpython3.9.so", RTLD_LAZY | RTLD_GLOBAL);
 #endif
 
+    if (mPyFilePath == "")
+    {
+      const char* filename = __FILE__;
+      std::filesystem::path file_path(filename);
+      mPyFilePath = file_path.parent_path().string();
+    }
     GetParameters(problemParametersNames, problemParametersStringValues);
 
     mFunction = std::make_shared<TPythonModuleWrapper>(mPyFilePath, problemParametersValues, 
