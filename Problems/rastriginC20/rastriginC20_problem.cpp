@@ -102,7 +102,7 @@ int rastriginC20Problem::GetNumberOfCriterions() const
 double rastriginC20Problem::CalculateFunctionals(const std::vector<double>& x, std::vector<std::string>& u, int fNumber)
 {
   
-  if (fNumber == 21)
+  if (fNumber == 20)
   {
     double sum = 0.;
     for (int j = 0; j < mDimension; j++)
@@ -274,15 +274,6 @@ double rastriginC20Problem::CalculateFunctionals(const std::vector<double>& x, s
     }
     return prod - 1.0 - 1.1;
   }
-  else if (fNumber == 20)
-  {
-    double sum = 0.;
-    for (int j = 0; j < mDimension; j++) {
-      sum += fabs(x[j]) - x[j] * x[j];
-    }
-    return sum - 1.1;
-  }
-
 }
 
 inline int rastriginC20Problem::GetStartTrial(std::vector<double>& y, std::vector<std::string>& u, std::vector<double>& values)
