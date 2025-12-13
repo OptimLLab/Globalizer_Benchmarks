@@ -112,11 +112,11 @@ class SVC_3D_Optuna(Problem):
         return 1 - f1_mean
 
     def optimize_with_optuna(self, show_plots: bool = True) -> None:
-        """Оптимизация гиперпараметров с помощью Optuna"""
-        print("=" * 60)
-        print("Начинаем оптимизацию гиперпараметров SVM с помощью Optuna")
-        print(f"Количество trials: {self.n_trials}")
-        print("=" * 60)
+        #"""Оптимизация гиперпараметров с помощью Optuna"""
+        #print("=" * 60)
+        #print("Начинаем оптимизацию гиперпараметров SVM с помощью Optuna")
+        #print(f"Количество trials: {self.n_trials}")
+        #print("=" * 60)
 
         # Создаем исследование
         self.study = optuna.create_study(
@@ -140,11 +140,11 @@ class SVC_3D_Optuna(Problem):
         self.best_value = self.study.best_value
 
         # Выводим результаты
-        print("\n" + "=" * 60)
-        print("ОПТИМИЗАЦИЯ ЗАВЕРШЕНА")
-        print("=" * 60)
-        print(f"Лучшее значение целевой функции (1 - f1_macro): {self.best_value:.4f}")
-        print(f"Соответствующее значение f1_macro: {1 - self.best_value:.4f}")
+        #print("\n" + "=" * 60)
+        #print("ОПТИМИЗАЦИЯ ЗАВЕРШЕНА")
+        #print("=" * 60)
+        print(f"Лучшее значение целевой функции : {self.best_value:.4f}")
+        #print(f"Соответствующее значение f1_macro: {1 - self.best_value:.4f}")
         print("\nЛучшие гиперпараметры:")
         for param, value in self.best_params.items():
             if param == 'C_log':
@@ -153,14 +153,14 @@ class SVC_3D_Optuna(Problem):
                 print(f"  gamma (10^{value:.2f}): {10 ** value:.2e}")
             else:
                 print(f"  {param}: {value}")
-
-        # Визуализация результатов
-        if show_plots:
-            try:
-                import plotly
-                self.plot_results()
-            except ImportError:
-                print("\nДля визуализации установите plotly: pip install plotly")
+        
+        ## Визуализация результатов
+        #if show_plots:
+        #    try:
+        #        import plotly
+        #        self.plot_results()
+        #    except ImportError:
+        #        print("\nДля визуализации установите plotly: pip install plotly")
 
     def plot_results(self) -> None:
         """Визуализация результатов оптимизации"""
@@ -286,7 +286,7 @@ if __name__ == '__main__':
 
     # Создаем оптимизатор
     svm_optimizer = SVC_3D_Optuna(
-        n_trials=100,  # Количество испытаний
+        n_trials=36,  # Количество испытаний
         timeout=3600  # Максимальное время в секундах (1 час)
     )
 
@@ -294,21 +294,21 @@ if __name__ == '__main__':
     svm_optimizer.optimize_with_optuna(show_plots=True)
 
     # Сравниваем с моделью по умолчанию
-    svm_optimizer.compare_with_default()
+    #svm_optimizer.compare_with_default()
 
     # Получаем лучшую модель
-    best_model = svm_optimizer.get_best_model()
-    print(f"\nЛучшая модель: {best_model}")
+    #best_model = svm_optimizer.get_best_model()
+    #print(f"\nЛучшая модель: {best_model}")
 
     # Дополнительно: можно сохранить лучшие параметры в файл
-    import json
+    #import json
 
-    best_params_transformed = {
-        'C': 10 ** svm_optimizer.best_params['C_log'],
-        'gamma': 10 ** svm_optimizer.best_params['gamma_log'],
-        'kernel': svm_optimizer.best_params['kernel']
-    }
+    #best_params_transformed = {
+    #    'C': 10 ** svm_optimizer.best_params['C_log'],
+    #    'gamma': 10 ** svm_optimizer.best_params['gamma_log'],
+    #    'kernel': svm_optimizer.best_params['kernel']
+    #}
 
-    with open('best_svm_params.json', 'w') as f:
-        json.dump(best_params_transformed, f, indent=4)
-    print("\nЛучшие параметры сохранены в best_svm_params.json")
+    #with open('best_svm_params.json', 'w') as f:
+    #    json.dump(best_params_transformed, f, indent=4)
+    #print("\nЛучшие параметры сохранены в best_svm_params.json")
