@@ -1,3 +1,6 @@
+import warnings
+warnings.filterwarnings('ignore', category=UserWarning)
+
 from typing import List
 import Cardio2D
 from TestsProblem import TestsProblem
@@ -127,6 +130,8 @@ class GlobalizerProblem:
 def get_problem_parameters_names(class_name: str)->List[str]:
     if class_name == 'Rastrigin':
         return ["Dimension"]
+    if class_name == 'ECGClassificationProblem':
+        return ["Dimension", "ProcRank"]
     if class_name == 'TestsProblem':
         return ["DataSet", "Method"]
     return []

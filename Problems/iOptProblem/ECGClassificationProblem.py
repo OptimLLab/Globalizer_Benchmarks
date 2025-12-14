@@ -1,3 +1,9 @@
+#import os
+#os.environ["CUDA_VISIBLE_DEVICES"] = "0,1"  # Использует GPU 0 и 1
+
+import warnings
+warnings.filterwarnings('ignore', category=UserWarning)
+
 from ClassificationScripts.dataset import ECGDataset
 from ClassificationScripts.model import MobileNetV3Small1D
 from trial import Point
@@ -12,9 +18,12 @@ import torch
 import torch.nn as nn
 import os
 
-def train(model, train_loader, test_loader, epochs=10, lr=1e-3):
-    device = torch.device("cuda")# if torch.cuda.is_available() else "cpu")
+def train(model, train_loader, test_loader, epochs=10, lr=1e-3, gpu_id=0):
+    device = torch.device(f"cuda:{gpu_id}")# if torch.cuda.is_available() else "cpu")
     model = model.to(device)
+    #if torch.cuda.device_count() > 1:
+    #    model = nn.DataParallel(model)
+
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
     criterion = nn.CrossEntropyLoss()
 
@@ -56,7 +65,7 @@ def train(model, train_loader, test_loader, epochs=10, lr=1e-3):
         accuracy = correct / total
         acc = accuracy
         test_accuracies.append(accuracy)
-        print(f"Test Accuracy: {accuracy:.4f}")
+        #print(f"Test Accuracy: {accuracy:.4f}")
     return acc
 
 def prepare_data():
@@ -68,7 +77,7 @@ def prepare_data():
     dataset_raw = dict()
     for i in range(1, 201):
         signalpath = os.path.join(record_names_path, str(i))
-        print(signalpath)
+        #print(signalpath)
         dataset_raw[i] = wfdb.rdrecord(signalpath)
     rhythm_raw = dict()
 
@@ -80,7 +89,7 @@ def prepare_data():
             rhythm_raw[patient_id] = 1
         else:
             rhythm_raw[patient_id] = 2
-        print(f"{rhythm_str} = {rhythm_raw[patient_id]}")  # DEBUG
+        #print(f"{rhythm_str} = {rhythm_raw[patient_id]}")  # DEBUG
 
     # Подготовка данных
     X = []
@@ -96,13 +105,13 @@ def prepare_data():
     return X, y
 
 class ECGClassificationProblem(Problem):
-    def __init__(self, dimension: int):
+    def __init__(self, dimension: int, ProcRank:int=0):
         super(ECGClassificationProblem, self).__init__()
         self.dimension = dimension
         self.number_of_float_variables = dimension
         self.number_of_objectives = 1
         self.number_of_constraints = 0
-
+        print(dimension, ProcRank)
 
         X, y = prepare_data()
 
@@ -122,17 +131,28 @@ class ECGClassificationProblem(Problem):
         self.lower_bound_of_float_variables = [0.0, 80.0]
         self.upper_bound_of_float_variables = [1.0, 200.0]
 
+        GPU_count = torch.cuda.device_count()
+        print(f"Доступно GPU: {GPU_count}")
+        for i in range(GPU_count):
+            print(f"GPU {i}: {torch.cuda.get_device_name(i)}")
 
+        self.gpu_id = ProcRank % GPU_count;
+        
+        print(f"gpu_id = {self.gpu_id}")
 
 
     def calculate(self, point: Point, function_value: FunctionValue) -> FunctionValue:
         p, f = point.float_variables[0], point.float_variables[1]
 
         model = MobileNetV3Small1D(in_channels=2, num_classes=3, p=p, o_features=int(f))
-        acc = train(model, self.train_loader, self.test_loader, epochs=100, lr=1e-3)
+        acc = train(model, self.train_loader, self.test_loader, epochs=100, lr=1e-3, gpu_id=self.gpu_id)
 
-        print('p ' + f"{p:.9f}")
-        print('features ' + f"{f:.9f}")
+        #print('p ' + f"{p:.9f}")
+        #print('features ' + f"{f:.9f}")
         function_value.value = -acc
-        print(-acc)
+        #print(-acc)
+        print('p ' + f"{p:.9f}"+ '\tfeatures ' + f"{f:.9f}" + "\tvalue " + f"{function_value.value:.9f}", flush=True)
         return function_value
+        
+if __name__ == '__main__':
+    problem_ecg_class = ECGClassificationProblem(2)

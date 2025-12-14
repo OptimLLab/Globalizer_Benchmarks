@@ -18,6 +18,7 @@ iOptProblem::iOptProblem()
 
   functionScriptName = "TestsProblem";
   functionClassName = "TestsProblem";
+  ProcRank = 0;
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -172,6 +173,10 @@ inline int iOptProblem::SetParameter(std::string name, std::string value)
   else   if (name == "Method")
       methodName = value;
 
+  else   if (name == "ProcRank")
+      ProcRank = std::stoi(value);;
+
+
 
   return IGlobalOptimizationProblem::PROBLEM_OK;
 }
@@ -218,6 +223,10 @@ inline void iOptProblem::GetParameters(std::vector<std::string>& names, std::vec
   problemParametersNames.push_back("Method");
   problemParametersStringValues.push_back(methodName);
   problemParametersValues.push_back(methodName);
+  
+  problemParametersNames.push_back("ProcRank");
+  problemParametersStringValues.push_back(std::to_string(ProcRank));
+  problemParametersValues.push_back(ProcRank);
 
   names = problemParametersNames;
   values = problemParametersStringValues;

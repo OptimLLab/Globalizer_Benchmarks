@@ -39,6 +39,7 @@ protected:
   /// Значения параметров
   std::vector<IOptVariantType> problemParametersValues;
 
+  int ProcRank = 0;
 public:
 
   iOptProblem();

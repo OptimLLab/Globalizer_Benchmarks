@@ -1,3 +1,6 @@
+import warnings
+warnings.filterwarnings('ignore', category=UserWarning)
+
 import numpy as np
 from trial import Point
 from trial import FunctionValue
