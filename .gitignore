@@ -91,6 +91,7 @@ Problems/iOptProblem/__pycache__/
 Problems/iOptProblem/.idea/
 Problems/iOptProblem/.venv/
 Problems/iOptProblem/ecg_ludb_records/
+Problems/iOptProblem/origin_frames/
 Problems/iOptProblem/Tests/data/datasets/
 Problems/iOptProblem/datasets/
 **/__pycache__/
