@@ -136,7 +136,7 @@ class ECGClassificationProblem(Problem):
         for i in range(GPU_count):
             print(f"GPU {i}: {torch.cuda.get_device_name(i)}")
 
-        self.gpu_id = ProcRank % GPU_count;
+        self.gpu_id = ProcRank % GPU_count
         
         print(f"gpu_id = {self.gpu_id}")
 
