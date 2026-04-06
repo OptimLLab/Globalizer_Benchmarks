@@ -1,7 +1,4 @@
 import warnings
-
-from ECGSegmentationProblem import ECGSegmentationProblem
-
 warnings.filterwarnings('ignore', category=UserWarning)
 
 from typing import List
@@ -135,6 +132,8 @@ def get_problem_parameters_names(class_name: str)->List[str]:
         return ["Dimension"]
     if class_name == 'ECGClassificationProblem':
         return ["Dimension", "ProcRank"]
+    if class_name == 'ECGSegmentationProblem':
+        return ["Dimension", "ProcRank"]
     if class_name == 'TestsProblem':
         return ["DataSet", "Method"]
     return []
@@ -157,21 +156,6 @@ def test_ecg_classification_problem():
     print(result)
     result_all_function = problem.calculate_all_functionals([0.5, 100], [])
     print(result_all_function)
-
-
-def test_ecg_best_segmentation_problem():
-    problem_ecg_segment = ECGSegmentationProblem(2)
-
-    problem = GlobalizerProblem(problem_ecg_segment)
-
-    bound = problem.get_lower_bounds()
-    print(bound)
-    result = problem.calculate([0.5, 4], [], 0)
-    print(result)
-    result_all_function = problem.calculate_all_functionals([0.5, 4], [])
-    print(result_all_function)
-
-
 
 def test_svc1d_problem():
     x, y = load_breast_cancer_data()
@@ -246,8 +230,7 @@ def TestSVC3D():
 
 
 if __name__ == "__main__":
-    test_ecg_best_segmentation_problem()
-    #TestSVC3D()
+    TestSVC3D()
     #TestsProblemTest()
     #test_ecg_classification_problem()
     #test_svc1d_problem()
