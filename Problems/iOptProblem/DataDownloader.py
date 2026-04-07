@@ -4,27 +4,27 @@ from typing import Optional
 import os
 import Loader as Loader
 
-def check_global_build_folder(project_folder: str, target_folder: str, max_level=10) -> Optional[Path]:
+def find_project_folder(project_folder: str, max_level = 6):
     current = Path.cwd()
     i = 0
     while True:
         if i == max_level:
             break
         i += 1
-
-        target_path = current / target_folder
-        if target_path.exists() and target_path.is_dir():
-            return target_path
-
-        if current.name == project_folder:
-            print("Достигнута папка проекта!")
-            break
-
+        if current.name == project_folder and current.exists() and current.is_dir():
+            return current
         parent = current.parent
-        if parent == current:  # дошли до корня
-            print("Достигнут корень системы - папка не найдена!")
+        if parent == current:
+            print("Найдена корневая папка!")
             break
         current = parent
+    return None
+
+def contains_build_folder(path: str):
+    bin_path = Path(path)
+    bin_path = bin_path.joinpath('_bin')
+    if bin_path.exists():
+        return bin_path
     return None
 
 def parse_args(default_args = None):
@@ -81,13 +81,13 @@ task_links = {
 }
 
 if __name__ == '__main__':
-    args = parse_args() #(['-s', 'local', '-c', 'ECGClassification', '-v'])
+    args = parse_args() #(['-s', 'global', '-c', 'ECGClassification', '-v'])
 
     path = None
     if args.source == 'local':
         path = Path("./datasets")
     if args.source == 'global':
-        path = check_global_build_folder("Globalizer", "_bin", 10)
+        path = contains_build_folder(find_project_folder("Globalizer"))
         if path:
             path = Path(os.path.join(path, 'datasets'))
             print(f"Папка найдена: {path}")
