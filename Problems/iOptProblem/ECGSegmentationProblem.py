@@ -629,7 +629,7 @@ def evaluate(model: nn.Module, loader: DataLoader, criterion: nn.Module, device:
 
 
 
-
+from pathlib import Path
 
 class ECGSegmentationProblem(Problem):
     def __init__(self, dimension: int, ProcRank: int = 0):
@@ -642,7 +642,9 @@ class ECGSegmentationProblem(Problem):
 
         set_seed(int(42))
 
-        self.data_dir = Path("origin_frames/")
+        current_dir = Path.cwd()
+
+        self.data_dir = Path("datasets/ECGSegmentation/")
         self.signal_suffix = str("_signal.npy")
         self.labels_suffix = str("_labels.npy")
 
@@ -677,12 +679,16 @@ class ECGSegmentationProblem(Problem):
         for i in range(GPU_count):
             print(f"GPU {i}: {torch.cuda.get_device_name(i)}")
 
-        #self.gpu_id = ProcRank % GPU_count
+        self.gpu_id = 0
+        if GPU_count != 0:
+            self.gpu_id = ProcRank % GPU_count
+            
+            self.device = torch.device(f"cuda:{self.gpu_id}")
 
-        #print(f"gpu_id = {self.gpu_id}")
+            torch.device(f"{self.device}")
 
-        self.device =  "cuda" if torch.cuda.is_available() else "cpu"
-        #torch.device(f"cuda:{self.gpu_id}")
+        else:
+            self.device = "cpu"
 
 
         self.float_variable_names = np.array(["P parameter", "Depth"], dtype=str)
@@ -690,10 +696,9 @@ class ECGSegmentationProblem(Problem):
         self.upper_bound_of_float_variables = [1.0, 5.0]
 
 
-
     def calculate(self, point: Point, function_value: FunctionValue) -> FunctionValue:
         p, d = point.float_variables[0], point.float_variables[1]
-
+        print("Calc ", p, d)
         model = UNet1D(
             in_channels=self.in_channels,
             num_classes=self.num_classes,
@@ -770,4 +775,7 @@ class ECGSegmentationProblem(Problem):
 
 
 if __name__ == '__main__':
+    data_dir = Path("datasets/ECGSegmentation/")
+    a = data_dir.is_dir()
+    b = 0
     problem_ecg_class = ECGSegmentationProblem(2)

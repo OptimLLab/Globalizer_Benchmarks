@@ -17,6 +17,7 @@ from torch.utils.data import Dataset, DataLoader
 import torch
 import torch.nn as nn
 import os
+from pathlib import Path
 
 def train(model, train_loader, test_loader, epochs=10, lr=1e-3, gpu_id=0):
     device = torch.device(f"cuda:{gpu_id}")# if torch.cuda.is_available() else "cpu")
@@ -69,35 +70,11 @@ def train(model, train_loader, test_loader, epochs=10, lr=1e-3, gpu_id=0):
     return acc
 
 def prepare_data():
-    folder_name = "ecg_ludb_records"
-    #os.makedirs(folder_name, exist_ok=True)
-    record_names_path = os.path.abspath(folder_name)
-    if not os.path.exists(record_names_path):
-        wfdb.dl_database('ludb', record_names_path, keep_subdirs=False)
-    dataset_raw = dict()
-    for i in range(1, 201):
-        signalpath = os.path.join(record_names_path, str(i))
-        #print(signalpath)
-        dataset_raw[i] = wfdb.rdrecord(signalpath)
-    rhythm_raw = dict()
-
-    for patient_id, patient_record in dataset_raw.items():
-        rhythm_str = patient_record.comments[3]
-        if rhythm_str == "Rhythm: Sinus rhythm.":
-            rhythm_raw[patient_id] = 0
-        elif rhythm_str.startswith("Rhythm: Sinus"):
-            rhythm_raw[patient_id] = 1
-        else:
-            rhythm_raw[patient_id] = 2
-        #print(f"{rhythm_str} = {rhythm_raw[patient_id]}")  # DEBUG
-
-    # Подготовка данных
     X = []
-    y = []
+    y = np.load(Path("datasets/ECGClassification/y.npy"))
 
-    for patient_id, patient_record in dataset_raw.items():
-        X.append(patient_record.p_signal)
-        y.append(rhythm_raw[patient_id])
+    for i in range(len(y)):
+        X.append(np.load(Path("datasets/ECGClassification/X", str(i) + ".npy")))
 
     X = np.array(X)  # (N, 5000, 12)
     X = X[:, :, 0:2]
@@ -107,6 +84,7 @@ def prepare_data():
 class ECGClassificationProblem(Problem):
     def __init__(self, dimension: int, ProcRank:int=0):
         super(ECGClassificationProblem, self).__init__()
+        print("Init ", dimension)
         self.dimension = dimension
         self.number_of_float_variables = dimension
         self.number_of_objectives = 1
@@ -136,8 +114,17 @@ class ECGClassificationProblem(Problem):
         for i in range(GPU_count):
             print(f"GPU {i}: {torch.cuda.get_device_name(i)}")
 
-        self.gpu_id = ProcRank % GPU_count
-        
+        self.gpu_id = 0
+        if GPU_count != 0:
+            self.gpu_id = ProcRank % GPU_count
+
+            self.device = torch.device(f"cuda:{self.gpu_id}")
+
+            torch.device(f"{self.device}")
+
+        else:
+            self.device = "cpu"
+
         print(f"gpu_id = {self.gpu_id}")
 
 
