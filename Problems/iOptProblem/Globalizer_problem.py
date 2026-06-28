@@ -8,7 +8,7 @@ from rastrigin import Rastrigin
 from trial import Point
 from trial import FunctionValue
 from problem import Problem
-import SVC_Fixed_Kernel
+from MachineLearning.SupportVectorMachines import SVC_Fixed_Kernel
 from sklearn.datasets import load_breast_cancer
 from sklearn.utils import shuffle
 import requests
@@ -18,8 +18,11 @@ from pathlib import Path
 import hashlib
 import numpy as np
 import shutil
-from ECGClassificationProblem import ECGClassificationProblem
-from SVC_3D_Transformator import SVC_3D
+from ECG.ECGClassificationProblem import ECGClassificationProblem
+from MachineLearning.SupportVectorMachines.SVC_3D_Transformator import SVC_3D
+from ECG.ECGSegmentationProblem import ECGSegmentationProblem
+from AirObjectDetectionProblem import AirObjectDetectionProblem
+
 
 def _get_hash(path: Path) -> str:
     file_hash = hashlib.sha256()
@@ -136,7 +139,10 @@ def get_problem_parameters_names(class_name: str)->List[str]:
         return ["Dimension", "ProcRank"]
     if class_name == 'TestsProblem':
         return ["DataSet", "Method"]
+    if class_name == 'AirObjectDetectionProblem':
+        return ["DataSet", "Method"]
     return []
+
 
 
 def load_breast_cancer_data():
@@ -228,11 +234,30 @@ def TestSVC3D():
     print("transformator SVC 3D default value = " + str(default_result))
 
 
+def test_ecg_segmentation_problem_main():
+    problem_ecg_class = ECGSegmentationProblem(5,0)
+
+    problem = GlobalizerProblem(problem_ecg_class)
+
+    bound = problem.get_lower_bounds()
+    print(bound)
+    result = problem.calculate([4, 2, 0.3, 0.0005],['relu'])
+    print(result)
+
+def test_air_object_detected_problem():
+    problem_class = AirObjectDetectionProblem(2)
+    problem = GlobalizerProblem(problem_class)
+    bound = problem.get_lower_bounds()
+    print(bound)
+    result = problem.calculate([-3.0], ["32", "5"])
+    print(result)
 
 if __name__ == "__main__":
-    TestSVC3D()
+    #test_air_object_detected_problem()
+    #test_ecg_segmentation_problem_main()    
+    #TestSVC3D()
     #TestsProblemTest()
-    #test_ecg_classification_problem()
+    test_ecg_classification_problem()
     #test_svc1d_problem()
     #test_segmentation_problem()
     #test_rastrigin()

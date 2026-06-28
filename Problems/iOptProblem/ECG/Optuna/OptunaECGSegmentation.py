@@ -1,3 +1,37 @@
+import numpy as np
+from trial import Point
+from trial import FunctionValue
+from problem import Problem
+from sklearn.svm import SVC
+from sklearn.model_selection import cross_val_score
+from typing import Dict, List
+from sklearn.utils import shuffle
+import csv
+from sklearn.model_selection import StratifiedKFold
+from pathlib import Path
+from urllib.parse import urlencode
+import requests
+import zipfile
+import os
+import optuna
+import warnings
+import warnings
+warnings.filterwarnings('ignore', category=UserWarning)
+
+from ClassificationScripts.dataset import ECGDataset
+from ClassificationScripts.model import MobileNetV3Small1D
+from trial import Point
+from trial import FunctionValue
+from problem import Problem
+from typing import Dict
+from sklearn.model_selection import train_test_split
+import numpy as np
+import wfdb
+from torch.utils.data import Dataset, DataLoader
+import torch
+import torch.nn as nn
+import os
+from pathlib import Path
 from ClassificationScripts.dataset import ECGDataset
 from ClassificationScripts.model import MobileNetV3Small1D
 from trial import Point
@@ -22,6 +56,32 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.utils.data import DataLoader, Dataset
+
+from pathlib import Path
+from datetime import datetime
+
+
+def save_trial_callback(study, trial):
+    """Сохраняет информацию о завершенном испытании и текущем лучшем результате."""
+    with open("segmentation_trials_log.txt", "a", encoding="utf-8") as f:
+        # Получаем лучший результат на текущий момент
+        best_trial = study.best_trial
+        best_value = best_trial.value
+        best_params = best_trial.params
+        
+        # Записываем информацию о текущем испытании и лучшем результате
+        f.write("=" * 60 + "\n")
+        f.write(f"Trial {trial.number}:\n")
+        f.write(f"  Value: {trial.value}\n")
+        f.write(f"  Params: {trial.params}\n")
+        f.write(f"  State: {trial.state}\n")
+        f.write(f"  Duration: {trial.duration}\n")
+        f.write("-" * 60 + "\n")
+        f.write(f"Best so far (Trial {best_trial.number}):\n")
+        f.write(f"  Best Value: {best_value}\n")
+        f.write(f"  Best Params: {best_params}\n")
+        f.write("=" * 60 + "\n\n")
+
 
 def set_seed(seed: int) -> None:
     random.seed(seed)
@@ -629,26 +689,27 @@ def evaluate(model: nn.Module, loader: DataLoader, criterion: nn.Module, device:
 
 
 
-from pathlib import Path
 
-class ECGSegmentationProblem(Problem):
-    def __init__(self, dimension: int, ProcRank: int = 0):
-        super(ECGSegmentationProblem, self).__init__()
-        self.dimension = dimension
-        self.number_of_float_variables = dimension
+
+class OptunaECGSegmentation(Problem):
+    def __init__(self, n_trials: int = 100, timeout: int = None):
+        super().__init__()
+
+        self.dimension = 2
+        self.number_of_float_variables = 2
         self.number_of_objectives = 1
         self.number_of_constraints = 0
-        print(dimension, ProcRank)
+
 
         set_seed(int(42))
 
         current_dir = Path.cwd()
-
-        self.data_dir = Path("datasets/ECGSegmentation/")
+        self.data_dir = Path("ECGSegmentation/")
         self.signal_suffix = str("_signal.npy")
         self.labels_suffix = str("_labels.npy")
 
-        self.samples = collect_samples(self.data_dir, signal_suffix=self.signal_suffix, labels_suffix=self.labels_suffix)
+        self.samples = collect_samples(self.data_dir, signal_suffix=self.signal_suffix,
+                                       labels_suffix=self.labels_suffix)
         train_s, val_s = train_val_split(
             self.samples,
             val_frac=0.2,
@@ -660,11 +721,11 @@ class ECGSegmentationProblem(Problem):
         self.label_channel_idx = 0
         self.normalize = True
 
-
-        self.train_ds = NpySegmentationDataset(train_s, normalize=self.normalize, label_channel_idx=self.label_channel_idx,
-                                          signal_layout=self.signal_layout)
+        self.train_ds = NpySegmentationDataset(train_s, normalize=self.normalize,
+                                               label_channel_idx=self.label_channel_idx,
+                                               signal_layout=self.signal_layout)
         self.val_ds = NpySegmentationDataset(val_s, normalize=self.normalize, label_channel_idx=self.label_channel_idx,
-                                        signal_layout=self.signal_layout)
+                                             signal_layout=self.signal_layout)
 
         self.x0, self.y0 = self.train_ds[0]
         self.in_channels = int(self.x0.shape[0])
@@ -674,31 +735,31 @@ class ECGSegmentationProblem(Problem):
             self.num_classes = infer_num_classes(self.samples, label_channel_idx=self.label_channel_idx)
         self.num_classes = int(self.num_classes)
 
-        GPU_count = torch.cuda.device_count()
-        print(f"Доступно GPU: {GPU_count}")
-        for i in range(GPU_count):
-            print(f"GPU {i}: {torch.cuda.get_device_name(i)}")
-
-        self.gpu_id = 0
-        if GPU_count != 0:
-            self.gpu_id = ProcRank % GPU_count
-            
-            self.device = torch.device(f"cuda:{self.gpu_id}")
-
-            torch.device(f"{self.device}")
-
-        else:
-            self.device = "cpu"
-
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
         self.float_variable_names = np.array(["P parameter", "Depth"], dtype=str)
         self.lower_bound_of_float_variables = [0.0, 2.0]
         self.upper_bound_of_float_variables = [1.0, 5.0]
 
+        # Параметры для Optuna
+        self.n_trials = n_trials
+        self.timeout = timeout
+        self.study = None
+        self.best_params = None
+        self.best_value = None
 
-    def calculate(self, point: Point, function_value: FunctionValue) -> FunctionValue:
-        p, d = point.float_variables[0], point.float_variables[1]
-        print("Calc ", p, d)
+    def objective(self, trial: optuna.Trial) -> float:
+        """Целевая функция для Optuna"""
+        # Предлагаем значения гиперпараметров
+
+        p = trial.suggest_float('P_Dropout',
+                                 self.lower_bound_of_float_variables[0],
+                                 self.upper_bound_of_float_variables[0])
+
+        d = trial.suggest_float('Depth',
+                                        self.lower_bound_of_float_variables[1],
+                                        self.upper_bound_of_float_variables[1])
+
         model = UNet1D(
             in_channels=self.in_channels,
             num_classes=self.num_classes,
@@ -728,12 +789,12 @@ class ECGSegmentationProblem(Problem):
         ).to(self.device)
 
         optim = build_optimizer("adamw",
-            model,
-            lr=1e-3,
-            weight_decay=0.0,
-        )
+                                model,
+                                lr=1e-3,
+                                weight_decay=0.0,
+                                )
 
-        batch_size = 8
+        batch_size = 32
         num_workers = 0
 
         train_loader = DataLoader(self.train_ds, batch_size=batch_size, shuffle=True, num_workers=num_workers,
@@ -760,7 +821,7 @@ class ECGSegmentationProblem(Problem):
                 "val_accuracy": va["accuracy"],
                 "val_macro_f1": va["macro_f1"],
             }
-            print(" | ".join([f"{k}={v:.4f}" if isinstance(v, float) else f"{k}={v}" for k, v in logs.items()]))
+            #print(" | ".join([f"{k}={v:.4f}" if isinstance(v, float) else f"{k}={v}" for k, v in logs.items()]))
 
             score = float(logs["val_macro_f1"])
             if score > best:
@@ -768,14 +829,74 @@ class ECGSegmentationProblem(Problem):
                 if save_best_path:
                     Path(save_best_path).parent.mkdir(parents=True, exist_ok=True)
                     torch.save(model.state_dict(), save_best_path)
-                    print(f"  -> saved best to {save_best_path} (val_macro_f1={best:.4f})")
+                    #print(f"  -> saved best to {save_best_path} (val_macro_f1={best:.4f})")
 
-        function_value.value = -best
-        return function_value
+
+        return -best
+
+
+    def optimize_with_optuna(self, show_plots: bool = True) -> None:
+        # Создаем исследование
+        self.study = optuna.create_study(
+            study_name='ecg_segmentation_hyperparameter_optimization',
+            direction='minimize',  # Минимизируем 1 - f1_macro
+            sampler=optuna.samplers.TPESampler(seed=42),  # Детерминированный семплинг
+            pruner=optuna.pruners.MedianPruner(),  # Отсечение бесперспективных trials
+            storage=None  # Можно указать БД для сохранения: 'sqlite:///svm_study.db'
+        )
+
+        # Запускаем оптимизацию
+        self.study.optimize(
+            self.objective,
+            n_trials=self.n_trials,
+            timeout=self.timeout,
+            show_progress_bar=True,
+            callbacks=[save_trial_callback]
+        )
+
+        # Сохраняем лучшие результаты
+        self.best_params = self.study.best_params
+        self.best_value = self.study.best_value
+
+
+        print(f"Лучшее значение целевой функции : {self.best_value:.4f}")
+
+        print("\nЛучшие гиперпараметры:")
+        for param, value in self.best_params.items():
+            if param == 'P_Dropout':
+                print(f"  p = {value}")
+            elif param == 'Depth':
+                print(f"  d = {value}")
+            else:
+                print(f"  {param}: {value}")
+
 
 
 if __name__ == '__main__':
-    data_dir = Path("datasets/ECGSegmentation/")
-    a = data_dir.is_dir()
-    b = 0
-    problem_ecg_class = ECGSegmentationProblem(2)
+
+    with open("segmentation_trials_log.txt", "a", encoding="utf-8") as f:
+        current_datetime = datetime.now()
+
+        # Записываем информацию о текущем испытании и лучшем результате
+        f.write("=" * 60 + "\n")
+        f.write(f"Start {current_datetime}:\n")
+        f.write("=" * 60 + "\n\n")
+
+    # Создаем оптимизатор
+    svm_optimizer = OptunaECGSegmentation(
+        n_trials=320,  # Количество испытаний
+        timeout=10*3600  # Максимальное время в секундах (1 час)
+    )
+
+    # Выполняем оптимизацию
+    svm_optimizer.optimize_with_optuna(show_plots=True)
+
+
+
+    with open("segmentation_trials_log.txt", "a", encoding="utf-8") as f:
+        current_datetime = datetime.now()
+
+        # Записываем информацию о текущем испытании и лучшем результате
+        f.write("=" * 60 + "\n")
+        f.write(f"Finish {current_datetime}:\n")
+        f.write("=" * 60 + "\n\n")
