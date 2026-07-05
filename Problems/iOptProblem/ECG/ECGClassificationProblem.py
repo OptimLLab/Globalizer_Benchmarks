@@ -1,36 +1,31 @@
-#import os
-#os.environ["CUDA_VISIBLE_DEVICES"] = "0,1"  # Использует GPU 0 и 1
-
 import warnings
 warnings.filterwarnings('ignore', category=UserWarning)
-
 from ClassificationScripts.dataset import ECGDataset
 from ClassificationScripts.model import MobileNetV3Small1D
 from trial import Point
 from trial import FunctionValue
 from problem import Problem
-from typing import Dict
 from sklearn.model_selection import train_test_split
 import numpy as np
-import wfdb
 from torch.utils.data import Dataset, DataLoader
+from pathlib import Path
+from sklearn.metrics import f1_score
 import torch
 import torch.nn as nn
-import os
-from pathlib import Path
 
-def train(model, train_loader, test_loader, epochs=10, lr=1e-3, gpu_id=0):
-    device = torch.device(f"cuda:{gpu_id}")# if torch.cuda.is_available() else "cpu")
+def train(model, train_loader, val_loader, epochs=10, lr=1e-3, gpu_id=0, patience=100):
+    device = torch.device(f"cuda:{gpu_id}")
     model = model.to(device)
-    #if torch.cuda.device_count() > 1:
-    #    model = nn.DataParallel(model)
 
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
     criterion = nn.CrossEntropyLoss()
 
     train_losses = []
-    test_accuracies = []
-    acc = 0
+    val_f1_scores = []
+    
+    best_val_f1 = 0
+    best_model_state = None
+    patience_counter = 0
 
     for epoch in range(epochs):
         model.train()
@@ -48,33 +43,46 @@ def train(model, train_loader, test_loader, epochs=10, lr=1e-3, gpu_id=0):
 
         avg_loss = total_loss / len(train_loader)
         train_losses.append(avg_loss)
-        #print(f"Epoch {epoch + 1}/{epochs}, Loss: {avg_loss:.4f}")
+        
+        val_f1 = evaluate(model, val_loader, device)
+        val_f1_scores.append(val_f1)
+        
+        if val_f1 > best_val_f1:
+            best_val_f1 = val_f1
+            patience_counter = 0
+        else:
+            patience_counter += 1
+            
+        if patience_counter >= patience:
+            print(f"Early stopping at epoch {epoch+1}")
+            break
 
-        # Validation
-        model.eval()
-        correct = 0
-        total = 0
-        with torch.no_grad():
-            for X_batch, y_batch in test_loader:
-                X_batch = X_batch.to(device)
-                y_batch = y_batch.to(device)
-                output = model(X_batch)
-                preds = output.argmax(dim=1)
-                correct += (preds == y_batch).sum().item()
-                total += y_batch.size(0)
+    return best_val_f1
 
-        accuracy = correct / total
-        acc = accuracy
-        test_accuracies.append(accuracy)
-        #print(f"Test Accuracy: {accuracy:.4f}")
-    return acc
+
+def evaluate(model, data_loader, device, f1_average='macro'):
+    model.eval()
+    all_preds = []
+    all_labels = []
+    
+    with torch.no_grad():
+        for X_batch, y_batch in data_loader:
+            X_batch = X_batch.to(device)
+            y_batch = y_batch.to(device)
+            output = model(X_batch)
+            preds = output.argmax(dim=1)
+            
+            all_preds.extend(preds.cpu().numpy())
+            all_labels.extend(y_batch.cpu().numpy())
+    
+    return f1_score(all_labels, all_preds, average=f1_average)
 
 def prepare_data():
     X = []
-    y = np.load(Path("datasets/ECGClassification/y.npy"))
+    y = np.load(Path("ECG/datasets/ECGClassification/y.npy"))
 
     for i in range(len(y)):
-        X.append(np.load(Path("datasets/ECGClassification/X", str(i) + ".npy")))
+        X.append(np.load(Path("ECG/datasets/ECGClassification/X", str(i) + ".npy")))
 
     X = np.array(X)  # (N, 5000, 12)
     X = X[:, :, 0:2]
@@ -132,12 +140,10 @@ class ECGClassificationProblem(Problem):
         p, f = point.float_variables[0], point.float_variables[1]
 
         model = MobileNetV3Small1D(in_channels=2, num_classes=3, p=p, o_features=int(f))
-        acc = train(model, self.train_loader, self.test_loader, epochs=100, lr=1e-3, gpu_id=self.gpu_id)
+        macro_F1 = train(model, self.train_loader, self.test_loader, epochs=100, lr=1e-3, gpu_id=self.gpu_id)
 
-        #print('p ' + f"{p:.9f}")
-        #print('features ' + f"{f:.9f}")
-        function_value.value = -acc
-        #print(-acc)
+        function_value.value = -macro_F1
+
         print('p ' + f"{p:.9f}"+ '\tfeatures ' + f"{f:.9f}" + "\tvalue " + f"{function_value.value:.9f}", flush=True)
         return function_value
         
