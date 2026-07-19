@@ -21,7 +21,7 @@ import shutil
 from ECG.ECGClassificationProblem import ECGClassificationProblem
 from MachineLearning.SupportVectorMachines.SVC_3D_Transformator import SVC_3D
 from ECG.ECGSegmentationProblem import ECGSegmentationProblem
-from AirObjectDetectionProblem import AirObjectDetectionProblem
+#from AirObjectDetectionProblem import AirObjectDetectionProblem
 
 
 def _get_hash(path: Path) -> str:
@@ -244,20 +244,20 @@ def test_ecg_segmentation_problem_main():
     result = problem.calculate([4, 2, 0.3, 0.0005],['relu'])
     print(result)
 
-def test_air_object_detected_problem():
-    problem_class = AirObjectDetectionProblem(2)
-    problem = GlobalizerProblem(problem_class)
-    bound = problem.get_lower_bounds()
-    print(bound)
-    result = problem.calculate([-3.0], ["32", "5"])
-    print(result)
+#def test_air_object_detected_problem():
+#    problem_class = AirObjectDetectionProblem(2)
+#    problem = GlobalizerProblem(problem_class)
+#    bound = problem.get_lower_bounds()
+#    print(bound)
+#    result = problem.calculate([-3.0], ["32", "5"])
+#    print(result)
 
 if __name__ == "__main__":
     #test_air_object_detected_problem()
     #test_ecg_segmentation_problem_main()    
     #TestSVC3D()
     #TestsProblemTest()
-    test_ecg_classification_problem()
+    #test_ecg_classification_problem()
     #test_svc1d_problem()
     #test_segmentation_problem()
-    #test_rastrigin()
+    test_rastrigin()
