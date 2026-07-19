@@ -4,13 +4,16 @@
 
 #include "python_function.h"
 
+#include <iostream>
+#include <filesystem>
+
+
 // ------------------------------------------------------------------------------------------------
 PythonProblem::PythonProblem()
 {
   mIsInitialized = false;
   mDimension = 0;
-  //mPyFilePath = "F:/OptimLLab/Globalizer_Benchmarks/Problems/python_objective/objective_simple.py";
-  mPyFilePath = "F:/OptimLLab/Globalizer_Benchmarks/Problems/python_objective/";
+  mPyFilePath = "";
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -37,6 +40,13 @@ int PythonProblem::Initialize()
 {
   if (!mIsInitialized)
   {
+    if (mPyFilePath == "")
+    {
+      const char* filename = __FILE__;
+      std::filesystem::path file_path(filename);
+      mPyFilePath = file_path.parent_path().string();
+    }
+
 #ifndef WIN32
     mLibpython_handle = dlopen("/home/lebedev_i/miniconda3/lib/libpython3.9.so", RTLD_LAZY | RTLD_GLOBAL);
 #endif

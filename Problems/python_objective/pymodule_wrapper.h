@@ -34,6 +34,9 @@ protected:
   /// Нижняя граница области поиска
   std::vector<double> mLowerBound;
 
+  PyThreadState* main_ts;
+
+
 public:
   /// <summary>
   /// 

@@ -127,9 +127,8 @@ int main(int argc, char* argv[])
   }
   else
   {
-    //problePythonObjective->SetDimension(2);
     std::vector<double> y(iOptProblem->GetDimension(), 0.5);
-    std::vector <std::string> u = { "B" };
+    std::vector <std::string> u = { };
     double value = iOptProblem->CalculateFunctionals(y, u, 0);
 
     std::vector<std::string> names;
@@ -138,6 +137,28 @@ int main(int argc, char* argv[])
     for (int i = 0; i < names.size(); i++)
     {
         std::cout << names[i] << "\t=\t" << values[i] << std::endl;
+    }
+  }
+
+  IGlobalOptimizationProblem* iOptProblemSimple = 0;
+  if (InitGlobalOptimizationProblem(manager, iOptProblemSimple, "iOptProblemSimple.dll"))
+  {
+    std::cout << "Error during problem initialization\n";
+    return 0;
+  }
+  else
+  {
+    //problePythonObjective->SetDimension(2);
+    std::vector<double> y(iOptProblemSimple->GetDimension(), 0.5);
+    std::vector <std::string> u = { "B" };
+    double value = iOptProblemSimple->CalculateFunctionals(y, u, 0);
+
+    std::vector<std::string> names;
+    std::vector<std::string> values;
+    iOptProblemSimple->GetParameters(names, values);
+    for (int i = 0; i < names.size(); i++)
+    {
+      std::cout << names[i] << "\t=\t" << values[i] << std::endl;
     }
   }
 

@@ -1,0 +1,13 @@
+# Прямые зависимости, используемые в коде
+numpy==2.3.4
+requests==2.32.5
+tqdm==4.67.1
+
+# Транзитивные зависимости requests
+certifi==2025.10.5
+charset-normalizer==3.4.4
+idna==3.11
+urllib3==2.5.0
+
+# Транзитивная зависимость tqdm (для Windows)
+colorama==0.4.6

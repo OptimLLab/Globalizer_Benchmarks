@@ -258,8 +258,10 @@ TPythonModuleWrapper::TPythonModuleWrapper(const std::string& module_path, std::
 
     // Помечаем, что интерпретатор инициализирован в этом процессе.
     setenv("GLOBALIZER_PYTHON_INITIALIZED", "1", true);
-    if (!alreadyInit)
+
     // Освобождаем GIL один раз после инициализации.
+    if (!alreadyInit)
+      // Освобождаем GIL один раз после инициализации.
       main_ts = PyEval_SaveThread();
   }
   else
@@ -302,17 +304,17 @@ TPythonModuleWrapper::TPythonModuleWrapper(const std::string& module_path, std::
   PyObject* pArgs = Py_BuildValue("(s)", functionClassName.c_str());
   PyObject* pResultNames = PyObject_CallMethod(pModule, "get_problem_parameters_names", "O", pArgs);
   std::vector<std::string> mProblemParametersNames;
-  if (pResultNames)
+  if (pResultNames) 
   {
     mProblemParametersNames = py_list_to_vector_string(pResultNames);
     Py_DECREF(pResultNames);
   }
-  else
+  else 
   {
     PyErr_Print();
   }
 
-  if (pArgs)
+  if (pArgs) 
   {
     Py_DECREF(pArgs);
   }
@@ -330,7 +332,7 @@ TPythonModuleWrapper::TPythonModuleWrapper(const std::string& module_path, std::
   }
 
   PyObject* tuple = PyTuple_New(1);
-  if (!tuple)
+  if (!tuple) 
   {
     PyErr_Print();
     Py_DECREF(funcClass);
@@ -338,14 +340,14 @@ TPythonModuleWrapper::TPythonModuleWrapper(const std::string& module_path, std::
     std::exit(1);
   }
   PyTuple_SET_ITEM(tuple, 0, funcInstance);
-  Py_INCREF(funcInstance);
+  Py_INCREF(funcInstance); 
 
   ///////////////////////////////////////////////////////
 
 
   // Получаем класс из модуля
   pClass = PyObject_GetAttrString(pModule, "GlobalizerProblem");
-  if (!pClass || !PyCallable_Check(pClass))
+  if (!pClass || !PyCallable_Check(pClass)) 
   {
     PyErr_Print();
     std::cerr << "Cannot find class" << std::endl;
@@ -355,7 +357,7 @@ TPythonModuleWrapper::TPythonModuleWrapper(const std::string& module_path, std::
 
   // Создаем экземпляр класса
   pInstance = PyObject_CallObject(pClass, tuple);
-  if (!pInstance)
+  if (!pInstance) 
   {
     PyErr_Print();
     std::cerr << "Failed to create instance" << std::endl;
@@ -391,9 +393,9 @@ TPythonModuleWrapper::TPythonModuleWrapper(const std::string& module_path, std::
   PyObject* pResultDiscreteParams = PyObject_CallMethod(pInstance, "get_discrete_params", NULL);
   discreteParams = py_list_of_list_to_vector_vectors_str(pResultDiscreteParams);
   if (pResultDiscreteParams)
-    Py_DECREF(pResultDiscreteParams);
+      Py_DECREF(pResultDiscreteParams);
   else
-    PyErr_Print();
+      PyErr_Print();
 
   //main_ts = PyEval_SaveThread();  // Освобождаем GIL в каждом потоке
   //PyGILState_STATE gstate = PyGILState_Ensure();
@@ -401,7 +403,6 @@ TPythonModuleWrapper::TPythonModuleWrapper(const std::string& module_path, std::
 
   PyGILState_Release(gstate);
 }
-
 
 // ------------------------------------------------------------------------------------------------
 int TPythonModuleWrapper::GetDimension() const

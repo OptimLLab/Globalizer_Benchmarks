@@ -70,7 +70,37 @@ int setenv(const char* name, const char* value, int overwrite)
 TPythonModuleWrapper::TPythonModuleWrapper(const std::string& module_path)
 {
   setenv("PYTHONPATH", module_path.c_str(), true);
-  Py_Initialize();
+
+  // Надёжный на весь процесс флаг: Py_IsInitialized() ненадёжен,
+  // когда несколько DLL имеют своё состояние Python C-API.
+  const char* alreadyInit = getenv("GLOBALIZER_PYTHON_INITIALIZED");
+
+  if (!Py_IsInitialized())
+  {
+    Py_Initialize();
+    PyErr_Print();
+
+    // PyEval_InitThreads() устарел и НЕ НУЖЕН начиная с Python 3.7 —
+    // Py_Initialize() уже инициализирует GIL. Удаляем этот вызов.
+
+    // Помечаем, что интерпретатор инициализирован в этом процессе.
+    setenv("GLOBALIZER_PYTHON_INITIALIZED", "1", true);
+
+    // Освобождаем GIL один раз после инициализации.
+    if (!alreadyInit)
+      // Освобождаем GIL один раз после инициализации.
+      main_ts = PyEval_SaveThread();
+  }
+  else
+  {
+    // Интерпретатор уже поднят другой задачей/DLL — ничего не инициализируем.
+    main_ts = nullptr;
+  }
+
+  // Дальше — весь код с импортами, но ОБЯЗАТЕЛЬНО под GIL:
+  PyGILState_STATE gstate = PyGILState_Ensure();
+
+
   auto pName = PyUnicode_FromString("objective_simple");
   PyErr_Print();
   auto pModule = PyImport_Import(pName);
@@ -99,6 +129,7 @@ TPythonModuleWrapper::TPythonModuleWrapper(const std::string& module_path)
   assert(mPFunc != nullptr);
   assert(PyCallable_Check(mPFunc));
   Py_DECREF(pModule);
+  PyGILState_Release(gstate);
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -113,7 +144,7 @@ double TPythonModuleWrapper::EvaluateFunction(const std::vector<double>& y) cons
   double retval = 0;
 #pragma omp critical
 {
-
+  PyGILState_STATE gstate = PyGILState_Ensure();
   auto py_arg = makeFloatList(y.data(), mDimension);
   auto arglist = PyTuple_Pack(1, py_arg);
   auto result = PyObject_CallObject(mPFunc, arglist);
@@ -121,6 +152,7 @@ double TPythonModuleWrapper::EvaluateFunction(const std::vector<double>& y) cons
   Py_DECREF(py_arg);
   Py_DECREF(arglist);
   Py_DECREF(result);
+  PyGILState_Release(gstate);
 }
   return retval;
 }
@@ -128,8 +160,10 @@ double TPythonModuleWrapper::EvaluateFunction(const std::vector<double>& y) cons
 // ------------------------------------------------------------------------------------------------
 TPythonModuleWrapper::~TPythonModuleWrapper()
 {
+  PyGILState_STATE gstate = PyGILState_Ensure();
   Py_DECREF(mPFunc);
-  Py_Finalize();
+  PyGILState_Release(gstate);
+  //Py_Finalize();
 }
 
 // ------------------------------------------------------------------------------------------------
