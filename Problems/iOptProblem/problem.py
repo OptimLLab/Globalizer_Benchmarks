@@ -1,4 +1,6 @@
 from abc import ABC, abstractmethod
+from typing import List
+
 import numpy as np
 from trial import Point
 from trial import FunctionValue
@@ -31,8 +33,15 @@ class Problem(ABC):
           For any new problem statement that inherits from :class:`Problem`, this method should be overloaded
 
         :return: Calculated value of the function."""
-        function_value.value = 0;
+        function_value.value = 0
         return function_value
+
+    def finalize(self, coordinate: List[float], discreteCoordinate: List[str]) -> float:
+        """
+        The process that occurs after the solution search procedure
+        return: Calculated values of target metric"""
+        return 0.0
+
 
     def calculateAllFunction(self, point: Point, function_values: list[FunctionValue]) -> \
             list[FunctionValue]:

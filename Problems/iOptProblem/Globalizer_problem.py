@@ -9,7 +9,7 @@ from trial import Point
 from trial import FunctionValue
 from problem import Problem
 from MachineLearning.SupportVectorMachines import SVC_Fixed_Kernel
-from sklearn.datasets import load_breast_cancer
+from sklearn.datasets import  load_breast_cancer
 from sklearn.utils import shuffle
 import requests
 from tqdm import tqdm
@@ -131,6 +131,9 @@ class GlobalizerProblem:
     #     self.function_value: FunctionValue = FunctionValue()
     #     #self.result = self.problem.calculate(self.point, self.function_value)
     #     #self.result_value = float(self.result.value)
+
+    def finalize(self, coordinate: List[float], discreteCoordinate: List[str]):
+        self.problem.finalize(coordinate, discreteCoordinate)
 
 def get_problem_parameters_names(class_name: str)->List[str]:
     if class_name == 'Rastrigin':
@@ -275,13 +278,13 @@ def test_pacemaker_problem():
 #    print(result)
 
 if __name__ == "__main__":
-    test_pacemaker_problem()
+    #test_pacemaker_problem()
     #test_eegproblem()
     #test_air_object_detected_problem()
     #test_ecg_segmentation_problem_main()    
     #TestSVC3D()
     #TestsProblemTest()
-    #test_ecg_classification_problem()
+    test_ecg_classification_problem()
     #test_svc1d_problem()
     #test_segmentation_problem()
     #test_rastrigin()
