@@ -1,4 +1,6 @@
 import warnings
+from typing import List
+
 warnings.filterwarnings('ignore', category=UserWarning)
 from ClassificationScripts.dataset import ECGDataset
 from ClassificationScripts.model import MobileNetV3Small1D
@@ -14,7 +16,11 @@ import torch
 import torch.nn as nn
 
 def train(model, train_loader, val_loader, epochs=10, lr=1e-3, gpu_id=0, patience=100):
-    device = torch.device(f"cuda:{gpu_id}")
+    if gpu_id != 0:
+        device = torch.device(f"cuda:{gpu_id}")
+    else:
+        device = torch.device('cpu')
+
     model = model.to(device)
 
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
@@ -79,10 +85,10 @@ def evaluate(model, data_loader, device, f1_average='macro'):
 
 def prepare_data():
     X = []
-    y = np.load(Path("ECG/datasets/ECGClassification/y.npy"))
+    y = np.load(Path("datasets/ECGClassification/y.npy"))
 
     for i in range(len(y)):
-        X.append(np.load(Path("ECG/datasets/ECGClassification/X", str(i) + ".npy")))
+        X.append(np.load(Path("datasets/ECGClassification/X", str(i) + ".npy")))
 
     X = np.array(X)  # (N, 5000, 12)
     X = X[:, :, 0:2]
@@ -101,16 +107,30 @@ class ECGClassificationProblem(Problem):
 
         X, y = prepare_data()
 
-        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, stratify=y)
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, stratify=y)
 
         X_train = np.moveaxis(X_train, [1], [2])
+        #X_test = np.moveaxis(X_test, [1], [2])
+
+        X_val, X_test, y_val, y_test = train_test_split(X_test, y_test, test_size=0.5, stratify=y_test)
+
+        X_val = np.moveaxis(X_val, [1], [2])
+
         X_test = np.moveaxis(X_test, [1], [2])
+
+
 
         train_dataset = ECGDataset(X_train, y_train)
         test_dataset = ECGDataset(X_test, y_test)
+        val_dataset = ECGDataset(X_val, y_val)
+
+        self.model_save_path = Path("models")
+        if not Path.exists(self.model_save_path):
+            Path.mkdir(self.model_save_path)
 
         self.train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True)
         self.test_loader = DataLoader(test_dataset, batch_size=32)
+        self.val_loader = DataLoader(val_dataset, batch_size=32)
 
 
         self.float_variable_names = np.array(["P parameter", "Features parameter"], dtype=str)
@@ -125,9 +145,7 @@ class ECGClassificationProblem(Problem):
         self.gpu_id = 0
         if GPU_count != 0:
             self.gpu_id = ProcRank % GPU_count
-
             self.device = torch.device(f"cuda:{self.gpu_id}")
-
             torch.device(f"{self.device}")
 
         else:
@@ -140,12 +158,61 @@ class ECGClassificationProblem(Problem):
         p, f = point.float_variables[0], point.float_variables[1]
 
         model = MobileNetV3Small1D(in_channels=2, num_classes=3, p=p, o_features=int(f))
-        macro_F1 = train(model, self.train_loader, self.test_loader, epochs=100, lr=1e-3, gpu_id=self.gpu_id)
+        macro_F1 = train(model, self.train_loader, self.val_loader, epochs=100, lr=1e-3, gpu_id=self.gpu_id)
 
         function_value.value = -macro_F1
 
+        self.save_model(model, function_value.value, p, f)
+
         print('p ' + f"{p:.9f}"+ '\tfeatures ' + f"{f:.9f}" + "\tvalue " + f"{function_value.value:.9f}", flush=True)
         return function_value
+
+    def save_model(self, model, metric, param1, param2):
+        files = [f for f in self.model_save_path.iterdir() if f.is_file()]
+
+        for f in files:
+            f_metric = float(f.stem.split("_")[0])
+            if f_metric < metric:
+                return
+
+        local_path = self.model_save_path.joinpath(f"{metric}_{param1}_{param2}.pth")
+        torch.save(model.state_dict(), local_path)
+
+
+    def finalize(self, coordinate: List[float], discreteCoordinate: List[str]) -> float:
+        """
+        The process that occurs after the solution search procedure
+        return: Calculated values of target metric"""
+
+        files = [f for f in self.model_save_path.iterdir() if f.is_file()]
+        target_path = ""
+        for f in files:
+            params = f.stem.split("_")[1:]
+            if params == coordinate:
+                target_path = self.model_save_path.joinpath(f.name)
+                break
+
+        model = MobileNetV3Small1D(in_channels=2, num_classes=3, p=coordinate[0], o_features=int(coordinate[1]))
+        model.load_state_dict(torch.load(target_path, map_location=self.device))
+        model.eval()
+
+        all_preds = []
+        all_labels = []
+
+        with torch.no_grad():
+            for X_batch, y_batch in self.test_loader:
+                X_batch = X_batch.to(self.device)
+                y_batch = y_batch.to(self.device)
+                output = model(X_batch)
+                preds = output.argmax(dim=1)
+                all_preds.extend(preds.cpu().numpy())
+                all_labels.extend(y_batch.cpu().numpy())
+
+        finish_metric = f1_score(all_labels, all_preds, average='macro')
+        print("Значение целевой метрики на тестовой выборке: ", finish_metric)
+
+        return finish_metric
+
         
 if __name__ == '__main__':
     problem_ecg_class = ECGClassificationProblem(2)
