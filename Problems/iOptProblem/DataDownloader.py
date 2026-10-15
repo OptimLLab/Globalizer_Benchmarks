@@ -54,11 +54,11 @@ def parse_args(default_args = None):
     parser.add_argument(
         '-c', '--class',
         type=str,
-        choices=['ECGClassification', 'ECGSegmentation', 'ECGGeneration'],
+        choices=['ECGClassification', 'ECGSegmentation', 'ECGGeneration', 'ECGPacemakerClassification'],
         required=True,
         dest='task_class',  # Используем dest чтобы избежать конфликта с keyword 'class'
         default='ECGClassification',
-        help='Выберите класс задачи: ECGClassification, ECGSegmentation или ECGGeneration'
+        help='Выберите класс задачи: ECGClassification, ECGSegmentation, ECGPacemakerClassification, ECGGeneration...'
     )
 
     # Дополнительные опциональные аргументы
@@ -77,7 +77,8 @@ def parse_args(default_args = None):
 task_links = {
     "ECGClassification" : "https://disk.yandex.ru/d/2G-w_EXbKFb7QA",
     "ECGSegmentation" : "https://disk.yandex.ru/d/_-5_exJ9XUWAeA",
-    "ECGGeneration" : "---"
+    "ECGGeneration" : "---",
+    "ECGPacemakerClassification": "---"
 }
 
 if __name__ == '__main__':
