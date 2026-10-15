@@ -1,5 +1,3 @@
-
-
 import numpy as np
 import torch
 import pandas as pd
@@ -14,7 +12,6 @@ import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 import math
 import json
-
 from albumentations.pytorch import ToTensorV2
 from torch.utils.data import Dataset, DataLoader
 from tqdm import tqdm
@@ -25,10 +22,6 @@ from torchmetrics.classification import MulticlassRecall
 from torchmetrics.classification import MulticlassF1Score
 from torchmetrics.classification import MulticlassConfusionMatrix
 from datetime import datetime
-
-from trial import Point
-from trial import FunctionValue
-from problem import Problem
 from typing import Dict
 from sklearn.model_selection import train_test_split
 import numpy as np
@@ -41,11 +34,12 @@ from pathlib import Path
 from sklearn.metrics import f1_score
 import torch
 import torch.nn as nn
-from sklearn.metrics import f1_score
-import torch
-import torch.nn as nn
 import copy
 
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from trial import Point
+from trial import FunctionValue
+from problem import Problem
 
 
 """# Подготовка"""
@@ -186,9 +180,6 @@ val_test_transform = A.Compose([
   ToTensorV2()
 ])
 
-
-
-"""# Архитектура"""
 
 class CNA(nn.Module):
   def __init__(self, in_nc, out_nc, stride = 1):

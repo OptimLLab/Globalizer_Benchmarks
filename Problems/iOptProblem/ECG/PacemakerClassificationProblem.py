@@ -71,10 +71,6 @@ class PacemakerClassificationProblem(Problem):
                                  num_workers=0, pin_memory=True)
 
 
-
-
-
-
         self.float_variable_names = np.array(['num_blocks', 'growth_rate', 'dropout', 'learning_rate',
                                               'weight_decay', 'loss_alpha', 'loss_gamma', 'kernel_size'], dtype=str)
         self.lower_bound_of_float_variables = [2, 16, 0.2, 0.0001, 0.00005, 0.5, 1.0, 3]

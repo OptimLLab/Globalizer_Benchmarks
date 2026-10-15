@@ -1,12 +1,9 @@
 import warnings
 from typing import List
-
+import sys
 warnings.filterwarnings('ignore', category=UserWarning)
 from ClassificationScripts.dataset import ECGDataset
 from ClassificationScripts.model import MobileNetV3Small1D
-from trial import Point
-from trial import FunctionValue
-from problem import Problem
 from sklearn.model_selection import train_test_split
 import numpy as np
 from torch.utils.data import Dataset, DataLoader
@@ -14,6 +11,12 @@ from pathlib import Path
 from sklearn.metrics import f1_score
 import torch
 import torch.nn as nn
+import os
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from trial import Point
+from trial import FunctionValue
+from problem import Problem
 
 def train(model, train_loader, val_loader, epochs=10, lr=1e-3, gpu_id=0, patience=100):
     if gpu_id != 0:
@@ -84,16 +87,31 @@ def evaluate(model, data_loader, device, f1_average='macro'):
     return f1_score(all_labels, all_preds, average=f1_average)
 
 def prepare_data():
+    dataset_folder = Path(find_dataset_folder())
     X = []
-    y = np.load(Path("datasets/ECGClassification/y.npy"))
+    y = np.load(dataset_folder / "ECGClassification" / "Y.npy") # np.load(Path("datasets/ECGClassification/Y.npy"))
 
     for i in range(len(y)):
-        X.append(np.load(Path("datasets/ECGClassification/X", str(i) + ".npy")))
+        X.append(np.load(dataset_folder/ "ECGClassification" / "X"/(str(i) + ".npy")))
 
     X = np.array(X)  # (N, 5000, 12)
     X = X[:, :, 0:2]
     y = np.array(y)  # (N,)
     return X, y
+    
+def find_dataset_folder(folder_name='datasets'):
+    start = Path.cwd()
+    current = start / folder_name
+    if current.is_dir():
+        return current.resolve()
+    parent = start.parent
+    above = parent / folder_name
+    if above.is_dir():
+        return above.resolve()
+    for path in start.rglob(folder_name):
+        if path.is_dir():
+            return path.resolve()
+    return None
 
 class ECGClassificationProblem(Problem):
     def __init__(self, dimension: int, ProcRank:int=0):
@@ -169,11 +187,15 @@ class ECGClassificationProblem(Problem):
 
     def save_model(self, model, metric, param1, param2):
         files = [f for f in self.model_save_path.iterdir() if f.is_file()]
-
+        
         for f in files:
             f_metric = float(f.stem.split("_")[0])
+            print("Метрика старая: ", f_metric)
+            print("Метрика текущая: ", metric)
             if f_metric < metric:
                 return
+        
+        print("Модель сохранена: ", metric, param1, param2)
 
         local_path = self.model_save_path.joinpath(f"{metric}_{param1}_{param2}.pth")
         torch.save(model.state_dict(), local_path)
@@ -183,14 +205,25 @@ class ECGClassificationProblem(Problem):
         """
         The process that occurs after the solution search procedure
         return: Calculated values of target metric"""
+        
+        print("Проверка тестовой выборки в лучшей точке: ", coordinate, discreteCoordinate)
+
 
         files = [f for f in self.model_save_path.iterdir() if f.is_file()]
         target_path = ""
+        
         for f in files:
-            params = f.stem.split("_")[1:]
-            if params == coordinate:
+            cur_path = ""
+            for param in coordinate:
+                cur_path += "_" + str(param)
+
+            if cur_path in str(f):
+                val_metric = abs(float(f.stem.split("_")[0]))
                 target_path = self.model_save_path.joinpath(f.name)
                 break
+        
+        print("Лучшая модель: ", target_path)
+        
 
         model = MobileNetV3Small1D(in_channels=2, num_classes=3, p=coordinate[0], o_features=int(coordinate[1]))
         model.load_state_dict(torch.load(target_path, map_location=self.device))
@@ -209,10 +242,11 @@ class ECGClassificationProblem(Problem):
                 all_labels.extend(y_batch.cpu().numpy())
 
         finish_metric = f1_score(all_labels, all_preds, average='macro')
+        print("Значение целевой метрики на валидационной выборке: ", val_metric)
         print("Значение целевой метрики на тестовой выборке: ", finish_metric)
 
         return finish_metric
 
-        
+
 if __name__ == '__main__':
     problem_ecg_class = ECGClassificationProblem(2)
