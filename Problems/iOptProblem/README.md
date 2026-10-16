@@ -18,7 +18,7 @@
 | `ECGClassification` | [Яндекс.Диск](https://disk.yandex.ru/d/2G-w_EXbKFb7QA) |
 | `ECGSegmentation` | [Яндекс.Диск](https://disk.yandex.ru/d/_-5_exJ9XUWAeA) |
 | `ECGGeneration` | — (пока не задана) |
-| `ECGPacemakerClassification` | — (пока не задана) |
+| `ECGPacemakerClassification` | [Яндекс.Диск](https://disk.yandex.ru/d/6HDO3Nz5hfJJhQ) |
 
 ## Требования
 
@@ -119,8 +119,7 @@ python DataDownloader.py -s global -c ECGSegmentation
 task_links = {
     "ECGClassification": "https://disk.yandex.ru/d/2G-w_EXbKFb7QA",
     "ECGSegmentation": "https://disk.yandex.ru/d/_-5_exJ9XUWAeA",
-    "ECGGeneration": "---",
-    "ECGPacemakerClassification": "---",
+    "ECGPacemakerClassification": "https://disk.yandex.ru/d/6HDO3Nz5hfJJhQ",
     "NewTask": "https://example.com/dataset",  # ← новая задача
 }
 ```
