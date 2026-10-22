@@ -1,53 +1,30 @@
-import numpy as np
-import torch
-import pandas as pd
-import torch.nn as nn
-import seaborn as sns
 import torch.nn.functional as F
 import cv2
-import os
-import shutil
 import albumentations as A
-import matplotlib.pyplot as plt
-import matplotlib.image as mpimg
 import math
-import json
 from albumentations.pytorch import ToTensorV2
-from torch.utils.data import Dataset, DataLoader
-from tqdm import tqdm
-from sklearn.model_selection import train_test_split
-from torchmetrics.classification import MulticlassJaccardIndex
-from torchmetrics.classification import MulticlassPrecision
-from torchmetrics.classification import MulticlassRecall
-from torchmetrics.classification import MulticlassF1Score
-from torchmetrics.classification import MulticlassConfusionMatrix
-from datetime import datetime
-from typing import Dict
 from sklearn.model_selection import train_test_split
 import numpy as np
-import wfdb
 from torch.utils.data import Dataset, DataLoader
-import torch
-import torch.nn as nn
 import os
 from pathlib import Path
-from sklearn.metrics import f1_score
 import torch
 import torch.nn as nn
-import copy
+from typing import List
+import sys
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 from trial import Point
 from trial import FunctionValue
 from problem import Problem
-
+from Globalizer_problem import GlobalizerProblem
 
 """# Подготовка"""
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"Используется: {device}")
 
-base_dir = "./dataset"
+base_dir = "./dataset/FromAirObjectDetection"
 images_dir = os.path.join(base_dir, "color")
 masks_dir = os.path.join(base_dir, "mask")
 
@@ -72,7 +49,7 @@ EPOCHS_DIR = os.path.join(CHECKPOINT_DIR, "epochs")
 os.makedirs(EPOCHS_DIR, exist_ok = True)
 
 ITERS_LIMIT = 200 
-EPOCHS_FOR_OPT = 10 
+EPOCHS_FOR_OPT = 3
 R_OPT = 3.0 
 LOG10_LR_MIN_OPT = -4.0
 LOG10_LR_MAX_OPT = -2.0
@@ -291,13 +268,18 @@ class AirObjectDetectionProblem(Problem):
   def __init__(self, dimension: int, ProcRank:int=0):
     super(AirObjectDetectionProblem, self).__init__()
 
-    self.train_val_files, self.test_files = train_test_split(all_files, test_size=0.1,
+    self.train_val_files, self.test_files = train_test_split(all_files, test_size=0.15,
+                                                   random_state=42)
+
+    self.train_files, self.val_files = train_test_split(self.train_val_files, test_size=0.15,
                                                    random_state=42)
 
 
-
-
-    self.test_ds = DroneDataset(test_files, images_dir, masks_dir,
+    self.test_ds = DroneDataset(self.test_files, images_dir, masks_dir,
+                           transform = val_test_transform)
+    self.train_ds = DroneDataset(self.train_files, images_dir, masks_dir,
+                           transform = val_test_transform)
+    self.val_ds = DroneDataset(self.val_files, images_dir, masks_dir,
                            transform = val_test_transform)
 
     self.train_loader = DataLoader(self.train_ds, batch_size = BATCH_SIZE,
@@ -375,39 +357,23 @@ class AirObjectDetectionProblem(Problem):
 
     print(f"\n[iOpt] Testing: LR = {lr:.5f}, NC = {base_nc}, Downs = {num_downs}")
 
-    train_files, val_files = train_test_split(self.train_val_files, test_size=0.222,
-                                              random_state=42)
-    train_ds = DroneDataset(train_files, images_dir, masks_dir,
-                        transform = train_transform)
-    val_ds = DroneDataset(val_files, images_dir, masks_dir,
-                          transform = val_test_transform)
-
-    train_loader = DataLoader(train_ds, batch_size = BATCH_SIZE,
-                              shuffle = True, num_workers = NUM_WORKERS)
-    val_loader = DataLoader(val_ds, batch_size = BATCH_SIZE,
-                            shuffle = False, num_workers = NUM_WORKERS)
-
 
     model = Unet(in_nc = 3, nc = base_nc, out_nc = NUM_CLASSES,
                  num_downs = num_downs).to(self.device)
 
-    # Возможно стоит использовать как параметр гипероптимизации
     criterion = CombinedLoss(ce_weight=0.3, dice_weight=0.7)
     optimizer = torch.optim.Adam(model.parameters(), lr = lr)
 
     for epoch in range(EPOCHS_FOR_OPT):
       model.train()
 
-      for imgs, masks in train_loader:
+      for imgs, masks in self.train_loader:
         imgs = imgs.to(self.device)
         masks = masks.to(self.device)
-
         optimizer.zero_grad()
         preds = model(imgs)
-
         loss = criterion(preds, masks)
         loss.backward()
-
         if not math.isnan(loss.item()):
           optimizer.step()
 
@@ -418,7 +384,7 @@ class AirObjectDetectionProblem(Problem):
     valid_batches = 0
 
     with torch.no_grad():
-      for imgs, masks in val_loader:
+      for imgs, masks in self.val_loader:
         imgs = imgs.to(self.device)
         masks = masks.to(self.device)
 
@@ -445,10 +411,101 @@ class AirObjectDetectionProblem(Problem):
       avg_val_iou = val_iou / valid_batches
       avg_val_dice = val_dice / valid_batches
 
-    print(f"\Result: Loss={avg_val_loss:.4f}, IoU={avg_val_iou:.4f}, Dice={avg_val_dice:.4f}")
+    print(f"Result: Loss={avg_val_loss:.4f}, IoU={avg_val_iou:.4f}, Dice={avg_val_dice:.4f}")
 
     # F1 = 2*IoU*Dice/(IoU+Dice)
     f1_score = 2 * avg_val_iou * avg_val_dice / (avg_val_iou + avg_val_dice + 1e-6)
     function_value.value = (-1) * f1_score
 
+    self.save_model(model, function_value.value, base_nc, num_downs)
+
     return function_value
+
+  def save_model(self, model, metric, param1, param2):
+      files = [f for f in self.model_save_path.iterdir() if f.is_file()]
+
+      for f in files:
+          f_metric = float(f.stem.split("_")[0])
+          print("Метрика старая: ", f_metric)
+          print("Метрика текущая: ", metric)
+          if f_metric < metric:
+              return
+
+      print("Модель сохранена: ", metric, param1, param2)
+
+      local_path = self.model_save_path.joinpath(f"{metric}_{param1}_{param2}.pth")
+      torch.save(model.state_dict(), local_path)
+
+  def finalize(self, coordinate: List[float], discreteCoordinate: List[str]) -> float:
+      """
+      The process that occurs after the solution search procedure
+      return: Calculated values of target metric"""
+
+      print("Проверка тестовой выборки в лучшей точке: ", coordinate, discreteCoordinate)
+
+      files = [f for f in self.model_save_path.iterdir() if f.is_file()]
+      target_path = ""
+
+      for f in files:
+          cur_path = ""
+          for param in coordinate:
+              cur_path += "_" + str(param)
+
+          if cur_path in str(f):
+              val_metric = abs(float(f.stem.split("_")[0]))
+              target_path = self.model_save_path.joinpath(f.name)
+              break
+
+      print("Лучшая модель: ", target_path)
+
+      model = Unet(in_nc=3, nc=int(coordinate[0]), out_nc=NUM_CLASSES,
+                   num_downs=int(coordinate[1])).to(self.device)
+
+      model.load_state_dict(torch.load(target_path, map_location=self.device))
+      model.eval()
+
+      val_loss = 0
+      val_iou = 0
+      val_dice = 0
+      valid_batches = 0
+      criterion = CombinedLoss(ce_weight=0.3, dice_weight=0.7)
+
+      with torch.no_grad():
+          for imgs, masks in self.test_loader:
+              imgs = imgs.to(self.device)
+              masks = masks.to(self.device)
+              preds = model(imgs)
+              loss = criterion(preds, masks)
+
+              # Метрики IoU и Dice
+              iou, dice = self.calculate_iou_dice(preds, masks)
+
+              if not math.isnan(loss.item()):
+                  val_loss += loss.item()
+                  val_iou += iou
+                  val_dice += dice
+                  valid_batches += 1
+
+      if valid_batches == 0:
+          avg_val_loss = 999.0
+          avg_val_iou = 0.0
+          avg_val_dice = 0.0
+      else:
+          avg_val_loss = val_loss / valid_batches
+          avg_val_iou = val_iou / valid_batches
+          avg_val_dice = val_dice / valid_batches
+
+      # F1 = 2*IoU*Dice/(IoU+Dice)
+      f1_score = 2 * avg_val_iou * avg_val_dice / (avg_val_iou + avg_val_dice + 1e-6)
+
+      print("Значение целевой метрики на валидационной выборке: ", val_metric)
+      print("Значение целевой метрики на тестовой выборке: ", f1_score)
+
+      return f1_score
+
+if __name__ == '__main__':
+    problem_class = AirObjectDetectionProblem(2)
+    problem = GlobalizerProblem(problem_class)
+    result = problem.calculate([-3.0], ["32", "3"])
+    problem.finalize([-3.0], ["32", "3"])
+    print(result)

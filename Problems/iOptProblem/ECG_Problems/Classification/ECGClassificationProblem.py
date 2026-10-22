@@ -13,10 +13,11 @@ import torch
 import torch.nn as nn
 import os
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 from trial import Point
 from trial import FunctionValue
 from problem import Problem
+from Globalizer_problem import GlobalizerProblem
 
 def train(model, train_loader, val_loader, epochs=10, lr=1e-3, gpu_id=0, patience=100):
     if gpu_id != 0:
@@ -86,32 +87,17 @@ def evaluate(model, data_loader, device, f1_average='macro'):
     
     return f1_score(all_labels, all_preds, average=f1_average)
 
-def prepare_data():
-    dataset_folder = Path(find_dataset_folder())
+def prepare_data(base_path):
     X = []
-    y = np.load(dataset_folder / "ECGClassification" / "Y.npy") # np.load(Path("datasets/ECGClassification/Y.npy"))
+    y = np.load(base_path / "Y.npy") # np.load(Path("datasets/ECGClassification/Y.npy"))
 
     for i in range(len(y)):
-        X.append(np.load(dataset_folder/ "ECGClassification" / "X"/(str(i) + ".npy")))
+        X.append(np.load(base_path / "X"/(str(i) + ".npy")))
 
-    X = np.array(X)  # (N, 5000, 12)
+    X = np.array(X)
     X = X[:, :, 0:2]
-    y = np.array(y)  # (N,)
+    y = np.array(y)
     return X, y
-    
-def find_dataset_folder(folder_name='datasets'):
-    start = Path.cwd()
-    current = start / folder_name
-    if current.is_dir():
-        return current.resolve()
-    parent = start.parent
-    above = parent / folder_name
-    if above.is_dir():
-        return above.resolve()
-    for path in start.rglob(folder_name):
-        if path.is_dir():
-            return path.resolve()
-    return None
 
 class ECGClassificationProblem(Problem):
     def __init__(self, dimension: int, ProcRank:int=0):
@@ -122,8 +108,8 @@ class ECGClassificationProblem(Problem):
         self.number_of_objectives = 1
         self.number_of_constraints = 0
         print(dimension, ProcRank)
-
-        X, y = prepare_data()
+        self.base_path = Path("dataset/ECGClassification")
+        X, y = prepare_data(self.base_path)
 
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, stratify=y)
 
@@ -250,3 +236,9 @@ class ECGClassificationProblem(Problem):
 
 if __name__ == '__main__':
     problem_ecg_class = ECGClassificationProblem(2)
+    problem = GlobalizerProblem(problem_ecg_class)
+
+    bound = problem.get_lower_bounds()
+    print(bound)
+    result = problem.calculate([0.3, 100], [])
+    print(result)

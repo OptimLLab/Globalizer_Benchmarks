@@ -1,27 +1,20 @@
-from ClassificationScripts.dataset import ECGDataset
-from ClassificationScripts.model import MobileNetV3Small1D
-from trial import Point
-from trial import FunctionValue
-from problem import Problem
-from typing import Dict
-from sklearn.model_selection import train_test_split
-import numpy as np
-import wfdb
-from torch.utils.data import Dataset, DataLoader
-import torch
-import torch.nn as nn
-import os
-import argparse
+import sys
 import random
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Sequence, Tuple
-
+from typing import Dict, List, Optional, Sequence, Tuple
+from sklearn.metrics import f1_score
 import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.utils.data import DataLoader, Dataset
+
+sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
+from trial import Point
+from trial import FunctionValue
+from problem import Problem
+from Globalizer_problem import GlobalizerProblem
 
 def set_seed(seed: int) -> None:
     random.seed(seed)
@@ -72,6 +65,41 @@ def train_val_split(samples: Sequence[Sample], *, val_frac: float, seed: int, sh
     train = [samples[i] for i in train_idx.tolist()]
     val = [samples[i] for i in val_idx.tolist()]
     return train, val
+
+def train_val_test_split(
+    samples: Sequence,
+    *,
+    val_frac: float,
+    test_frac: float,
+    seed: int,
+    shuffle: bool = True,
+) -> Tuple[List, List, List]:
+    if not (0.0 <= val_frac <= 1.0):
+        raise ValueError(f"val_frac must be in [0,1], got {val_frac}")
+    if not (0.0 <= test_frac <= 1.0):
+        raise ValueError(f"test_frac must be in [0,1], got {test_frac}")
+    if val_frac + test_frac > 1.0:
+        raise ValueError(
+            f"val_frac + test_frac must be <= 1, got {val_frac + test_frac}"
+        )
+
+    idx = np.arange(len(samples))
+    rng = np.random.default_rng(seed)
+    if shuffle:
+        rng.shuffle(idx)
+
+    n = len(samples)
+    n_val = int(n * val_frac)
+    n_test = int(n * test_frac)
+
+    val_idx = idx[:n_val]
+    test_idx = idx[n_val:n_val + n_test]
+    train_idx = idx[n_val + n_test:]
+
+    train = [samples[i] for i in train_idx.tolist()]
+    val = [samples[i] for i in val_idx.tolist()]
+    test = [samples[i] for i in test_idx.tolist()]
+    return train, val, test
 
 
 def infer_num_classes(samples: Sequence[Sample], *, label_channel_idx: int = 0) -> int:
@@ -642,16 +670,26 @@ class ECGSegmentationProblem(Problem):
 
         set_seed(int(42))
 
-        current_dir = Path.cwd()
+        self.model_save_path = Path("models")
+        if not Path.exists(self.model_save_path):
+            Path.mkdir(self.model_save_path)
 
-        self.data_dir = Path("datasets/ECGSegmentation/")
+        self.data_dir = Path("dataset/ECGSegmentation")
         self.signal_suffix = str("_signal.npy")
         self.labels_suffix = str("_labels.npy")
 
         self.samples = collect_samples(self.data_dir, signal_suffix=self.signal_suffix, labels_suffix=self.labels_suffix)
-        train_s, val_s = train_val_split(
+        # train_s, val_s = train_val_split(
+        #     self.samples,
+        #     val_frac=0.2,
+        #     seed=42,
+        #     shuffle=True,
+        # )
+
+        train_s, val_s, test_s = train_val_test_split(
             self.samples,
-            val_frac=0.2,
+            val_frac=0.15,
+            test_frac=0.15,
             seed=42,
             shuffle=True,
         )
@@ -665,6 +703,12 @@ class ECGSegmentationProblem(Problem):
                                           signal_layout=self.signal_layout)
         self.val_ds = NpySegmentationDataset(val_s, normalize=self.normalize, label_channel_idx=self.label_channel_idx,
                                         signal_layout=self.signal_layout)
+        self.test_ds = NpySegmentationDataset(test_s, normalize=self.normalize, label_channel_idx=self.label_channel_idx,
+                                        signal_layout=self.signal_layout)
+
+        self.batch_size = 128
+
+
 
         self.x0, self.y0 = self.train_ds[0]
         self.in_channels = int(self.x0.shape[0])
@@ -690,6 +734,13 @@ class ECGSegmentationProblem(Problem):
         else:
             self.device = "cpu"
 
+
+        self.train_loader = DataLoader(self.train_ds, batch_size=self.batch_size, shuffle=True, num_workers=0,
+                                  pin_memory=(str(self.device).startswith("cpu")))
+        self.val_loader = DataLoader(self.val_ds, batch_size=self.batch_size, shuffle=False, num_workers=0,
+                                pin_memory=(str(self.device).startswith("cpu")))
+        self.test_loader = DataLoader(self.test_ds, batch_size=self.batch_size, shuffle=False, num_workers=0,
+                                pin_memory=(str(self.device).startswith("cpu")))
 
         self.float_variable_names = np.array(["P parameter", "Depth"], dtype=str)
         self.lower_bound_of_float_variables = [0.0, 2.0]
@@ -733,23 +784,15 @@ class ECGSegmentationProblem(Problem):
             weight_decay=0.0,
         )
 
-        batch_size = 2048
+
         num_workers = 0
 
-        train_loader = DataLoader(self.train_ds, batch_size=batch_size, shuffle=True, num_workers=num_workers,
-                                  pin_memory=(str(self.device).startswith("cuda")))
-        val_loader = DataLoader(self.val_ds, batch_size=batch_size, shuffle=False, num_workers=num_workers,
-                                pin_memory=(str(self.device).startswith("cuda")))
 
-        epochs = 40
-        save_best_path = "best.pt"
-        if save_best_path is not None:
-            save_best_path = str(save_best_path)
-
+        epochs = 10
         best = -1e18
         for epoch in range(1, epochs + 1):
-            tr = train_one_epoch(model, train_loader, optim, criterion, self.device)
-            va = evaluate(model, val_loader, criterion, self.device)
+            tr = train_one_epoch(model, self.train_loader, optim, criterion, self.device)
+            va = evaluate(model, self.val_loader, criterion, self.device)
 
             logs = {
                 "epoch": epoch,
@@ -765,17 +808,91 @@ class ECGSegmentationProblem(Problem):
             score = float(logs["val_macro_f1"])
             if score > best:
                 best = score
-                if save_best_path:
-                    Path(save_best_path).parent.mkdir(parents=True, exist_ok=True)
-                    torch.save(model.state_dict(), save_best_path)
-                    print(f"  -> saved best to {save_best_path} (val_macro_f1={best:.4f})")
+                self.save_model(model, -best, p, d)
 
         function_value.value = -best
         return function_value
 
+    def save_model(self, model, metric, param1, param2):
+        files = [f for f in self.model_save_path.iterdir() if f.is_file()]
+
+        for f in files:
+            f_metric = float(f.stem.split("_")[0])
+            if f_metric < metric:
+                return
+
+        print("Модель сохранена: ", metric, param1, param2)
+
+        local_path = self.model_save_path.joinpath(f"{metric}_{param1}_{param2}.pth")
+        torch.save(model.state_dict(), local_path)
+
+    def finalize(self, coordinate: List[float], discreteCoordinate: List[str]) -> float:
+        """
+        The process that occurs after the solution search procedure
+        return: Calculated values of target metric"""
+
+        print("Проверка тестовой выборки в лучшей точке: ", coordinate, discreteCoordinate)
+
+        files = [f for f in self.model_save_path.iterdir() if f.is_file()]
+        target_path = ""
+
+        for f in files:
+            cur_path = ""
+            for param in coordinate:
+                cur_path += "_" + str(param)
+
+            if cur_path in str(f):
+                val_metric = abs(float(f.stem.split("_")[0]))
+                target_path = self.model_save_path.joinpath(f.name)
+                break
+
+        print("Лучшая модель: ", target_path)
+
+        model = UNet1D(
+            in_channels=self.in_channels,
+            num_classes=self.num_classes,
+            base_filters=32,
+            depth=int(coordinate[1]),
+            channel_mult=2,
+            max_filters=None,
+            num_convs_per_block=2,
+            conv_kernel=3,
+            norm="bn",
+            act="relu",
+            dropout=coordinate[0],
+            gn_groups=8,
+            pool="max",
+            pool_kernel=2,
+            up_mode="transpose",
+            pad_mode="constant",
+            bottleneck_num_convs=None,
+        ).to(self.device)
+        model.load_state_dict(torch.load(target_path, map_location=self.device))
+        model.eval()
+
+        all_preds = []
+        all_labels = []
+
+        with torch.no_grad():
+            for X_batch, y_batch in self.test_loader:
+                X_batch = X_batch.to(self.device)
+                y_batch = y_batch.to(self.device)
+                output = model(X_batch)
+                preds = output.argmax(dim=1)
+                all_preds.extend(preds.cpu().numpy())
+                all_labels.extend(y_batch.cpu().numpy())
+
+        finish_metric = f1_score(all_labels, all_preds, average='macro')
+        print("Значение целевой метрики на валидационной выборке: ", val_metric)
+        print("Значение целевой метрики на тестовой выборке: ", finish_metric)
+
+        return finish_metric
+
 
 if __name__ == '__main__':
-    data_dir = Path("datasets/ECGSegmentation/")
-    a = data_dir.is_dir()
-    b = 0
-    problem_ecg_class = ECGSegmentationProblem(2)
+    problem_ecg_class = ECGSegmentationProblem(2,0)
+    problem = GlobalizerProblem(problem_ecg_class)
+    bound = problem.get_lower_bounds()
+    print(bound)
+    result = problem.calculate([0.3, 4],[])
+    print(result)

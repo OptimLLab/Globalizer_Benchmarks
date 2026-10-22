@@ -54,11 +54,11 @@ def parse_args(default_args = None):
     parser.add_argument(
         '-c', '--class',
         type=str,
-        choices=['ECGClassification', 'ECGSegmentation', 'ECGGeneration', 'ECGPacemakerClassification'],
+        choices=['ECGClassification', 'ECGSegmentation', 'EEGClassification', 'FromAirObjectDetection', 'ECGPacemakerClassification'],
         required=True,
         dest='task_class',  # Используем dest чтобы избежать конфликта с keyword 'class'
         default='ECGClassification',
-        help='Выберите класс задачи: ECGClassification, ECGSegmentation, ECGPacemakerClassification, ECGGeneration...'
+        help='Выберите класс задачи: ECGClassification, ECGSegmentation, ECGPacemakerClassification, FromAirObjectDetection...'
     )
 
     # Дополнительные опциональные аргументы
@@ -75,10 +75,11 @@ def parse_args(default_args = None):
         return parser.parse_args()
 
 task_links = {
-    "ECGClassification" : "https://disk.yandex.ru/d/2G-w_EXbKFb7QA",
-    "ECGSegmentation" : "https://disk.yandex.ru/d/_-5_exJ9XUWAeA",
-    "ECGGeneration" : "---",
-    "ECGPacemakerClassification": "---"
+    "ECGClassification" : ["https://disk.yandex.ru/d/2G-w_EXbKFb7QA", "ECG_Problems/Classification/dataset"],
+    "ECGSegmentation" : ["https://disk.yandex.ru/d/_-5_exJ9XUWAeA", "ECG_Problems/Segmentation/dataset"],
+    "FromAirObjectDetection": ["https://disk.yandex.ru/d/YLWsT_gKcT063w", "ObjectDetection/FromAirObjectDetection/dataset"],
+    "ECGPacemakerClassification": ["https://disk.yandex.ru/d/UWHfil_TGYiO_w", "ECG_Problems/Pacemaker/dataset"],
+    "EEGClassification": ["https://disk.yandex.ru/d/4tepqtF_RnC2Ig", "EEG_Problems/EEGClassification/dataset"]
 }
 
 if __name__ == '__main__':
@@ -86,7 +87,7 @@ if __name__ == '__main__':
 
     path = None
     if args.source == 'local':
-        path = Path("./datasets")
+        path = Path(task_links[args.task_class][1]) #("./datasets")
     if args.source == 'global':
         path = contains_build_folder(find_project_folder("Globalizer"))
         if path:
@@ -104,5 +105,5 @@ if __name__ == '__main__':
     if not path.exists():
         os.mkdir(path)
 
-    Loader.Load(path, task_links[args.task_class])
+    Loader.Load(path, task_links[args.task_class][0])
 

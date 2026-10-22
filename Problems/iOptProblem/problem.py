@@ -3,7 +3,7 @@ import numpy as np
 from trial import Point
 from trial import FunctionValue
 from trial import Trial
-
+from typing import List
 
 class Problem(ABC):
     """Base class for optimization problems"""
@@ -45,8 +45,12 @@ class Problem(ABC):
             function_values[i] = self.calculate(point, function_values[i])
 
         return function_values
-
-
+        
+    def finalize(self, coordinate: List[float], discreteCoordinate: List[str]) -> float:
+        finish_metric = -1
+        return finish_metric
+        
+        
     # @abstractmethod
     def get_name(self):
         """

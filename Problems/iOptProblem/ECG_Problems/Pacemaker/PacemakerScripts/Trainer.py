@@ -1,6 +1,6 @@
 import os
 from tqdm import tqdm
-from ECG.PacemakerScripts.MetricsCalculator import *
+from PacemakerScripts.MetricsCalculator import *
 from datetime import datetime
 import warnings
 warnings.filterwarnings('ignore')
@@ -68,8 +68,8 @@ class Trainer:
                 else:
                     scheduler.step()
 
-            if val_metrics['mcc'] > best_target_metric:
-                best_target_metric = val_metrics['mcc']
+            if val_metrics['f1'] > best_target_metric:
+                best_target_metric = val_metrics['f1']
                 best_state = self.model.state_dict().copy()
                 patience_counter = 0
                 torch.save(best_state, os.path.join(self.save_dir, f"{self.train_id}.pth"))
