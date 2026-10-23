@@ -108,3 +108,5 @@ Problems/iOptProblem/ECG/.idea/
 **/models/
 **/xception/
 **/__pycache__/
+**/uci-datasets/
+**/datasets/
