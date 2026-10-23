@@ -102,5 +102,11 @@ Problems/iOptProblem/checkpoints/
 Problems/iOptProblem/EEG/.idea/
 Problems/iOptProblem/ECG/.idea/
 .idea/
-
+**/dataset/
+**/checkpoints/
+**/.idea/
+**/models/
+**/xception/
 **/__pycache__/
+**/uci-datasets/
+**/datasets/

@@ -1,11 +1,9 @@
 from abc import ABC, abstractmethod
-from typing import List
-
 import numpy as np
 from trial import Point
 from trial import FunctionValue
 from trial import Trial
-
+from typing import List
 
 class Problem(ABC):
     """Base class for optimization problems"""
@@ -33,15 +31,8 @@ class Problem(ABC):
           For any new problem statement that inherits from :class:`Problem`, this method should be overloaded
 
         :return: Calculated value of the function."""
-        function_value.value = 0
+        function_value.value = 0;
         return function_value
-
-    def finalize(self, coordinate: List[float], discreteCoordinate: List[str]) -> float:
-        """
-        The process that occurs after the solution search procedure
-        return: Calculated values of target metric"""
-        return 0.0
-
 
     def calculateAllFunction(self, point: Point, function_values: list[FunctionValue]) -> \
             list[FunctionValue]:
@@ -54,8 +45,12 @@ class Problem(ABC):
             function_values[i] = self.calculate(point, function_values[i])
 
         return function_values
-
-
+        
+    def finalize(self, coordinate: List[float], discreteCoordinate: List[str]) -> float:
+        finish_metric = -1
+        return finish_metric
+        
+        
     # @abstractmethod
     def get_name(self):
         """
