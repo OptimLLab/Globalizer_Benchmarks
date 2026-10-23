@@ -1,9 +1,9 @@
 import numpy as np
 
 
-from Tests.hyperparams import Hyperparameter, Numerical, Categorial
+from scripts.hyperparams import Hyperparameter, Numerical, Categorial
 
-from Tests.interface import Searcher, Point
+from scripts.interface import Searcher, Point
 
 
 

@@ -1,13 +1,9 @@
 import warnings
-import os
 import sys
 
 warnings.filterwarnings('ignore', category=UserWarning)
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from trial import Point
-from trial import FunctionValue
-from problem import Problem
+
 from sklearn.model_selection import train_test_split
 import numpy as np
 from torch.utils.data import Dataset, DataLoader
@@ -19,16 +15,22 @@ import torch.nn as nn
 
 from dataclasses import dataclass, field
 from typing import List, Dict, Any
-from EEG.scripts.EEGClassificationDataset import *
-from EEG.scripts.FuzzyPart import *
+from scripts.EEGClassificationDataset import *
+from scripts.FuzzyPart import *
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torch.utils.data import DataLoader, WeightedRandomSampler
-from EEG.scripts.ThirdPartTools import *
+from scripts.ThirdPartTools import *
 
-DATA_DIR = 'EEG/learn_dataset'
-def Prepare(dataset_dir = '../dataset', batch_size = 32, num_workers = 0):
+sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
+from trial import Point
+from trial import FunctionValue
+from problem import Problem
+from Globalizer_problem import GlobalizerProblem
+
+
+def Prepare(dataset_dir = './dataset/EEGClassification', batch_size = 32, num_workers = 0):
     train_dataset = EEGClassificationDataset(
-        data_dir=DATA_DIR,
+        data_dir=dataset_dir,
         mode='train',
         normalize=True,
         augment=True,
@@ -37,7 +39,7 @@ def Prepare(dataset_dir = '../dataset', batch_size = 32, num_workers = 0):
     )
 
     val_dataset = EEGClassificationDataset(
-        data_dir=DATA_DIR,
+        data_dir=dataset_dir,
         mode='val',
         normalize=True,
         augment=False,
@@ -46,7 +48,7 @@ def Prepare(dataset_dir = '../dataset', batch_size = 32, num_workers = 0):
     )
 
     test_dataset = EEGClassificationDataset(
-        data_dir=DATA_DIR,
+        data_dir=dataset_dir,
         mode='test',
         normalize=True,
         augment=False,
@@ -107,7 +109,12 @@ class EEGProblem(Problem):
         self.number_of_objectives = 1
         self.number_of_constraints = 0
 
+        self.dataset_path = Path("dataset/EEGClassification")
         self.train_loader, self.val_loader, self.test_loader = Prepare()
+
+        self.model_save_path = Path("models")
+        if not Path.exists(self.model_save_path):
+            Path.mkdir(self.model_save_path)
 
 
         self.float_variable_names = np.array(["focal_alpha", "cnn_embedding_dim", "lr_fuzzy", "backbone_feature_dim_options"], dtype=str)
@@ -142,6 +149,16 @@ class EEGProblem(Problem):
         focal_alpha, cnn_embedding_dim, lr_fuzzy, backbone_feature_dim_options = point.float_variables[0], int(point.float_variables[1]), point.float_variables[2], int(point.float_variables[3])
 
         num_rules, backbone_name = int(point.discrete_variables[0]), point.discrete_variables[1]
+
+        model_params = {
+            'focal_alpha': focal_alpha,
+            'cnn_embedding_dim': cnn_embedding_dim,
+            'lr_fuzzy': lr_fuzzy,
+            'backbone_feature_dim_options': backbone_feature_dim_options,
+            'num_rules': num_rules,
+            'backbone_name': backbone_name
+        }
+
         config = FuzzyCNNConfig(
             backbone_name=backbone_name,
             input_channels=23,
@@ -192,22 +209,115 @@ class EEGProblem(Problem):
             epochs=100,
             optimizer=optimizer,
             scheduler=scheduler,
-            early_stopping_patience=20,
+            early_stopping_patience=50,
             save_best=True,
             verbose=True
         )
 
-
-
-
-        p, f = point.float_variables[0], point.float_variables[1]
-
-
         function_value.value = -trainer.best_val_mcc
+        self.save_model(model, function_value.value, model_params)
 
-        print('p ' + f"{p:.9f}" + '\tfeatures ' + f"{f:.9f}" + "\tvalue " + f"{function_value.value:.9f}", flush=True)
         return function_value
 
 
+    def save_model(self, model, metric, params_dict):
+        files = [f for f in self.model_save_path.iterdir() if f.is_file()]
+
+        for f in files:
+            f_metric = float(f.stem)
+            if f_metric < metric:
+                return
+
+        print("Модель сохранена: ", metric, params_dict)
+        local_path = self.model_save_path.joinpath(f"{metric}.pth")
+        torch.save(model.state_dict(), local_path)
+        with open(self.model_save_path.joinpath(f"{metric}.json"), "w", encoding="utf-8") as f:
+            json.dump(params_dict, f, ensure_ascii=False, indent=2)
+
+    def match_by_fields(self, d1, d2, fields):
+        return all(d1.get(f) == d2.get(f) for f in fields)
+
+    def finalize(self, coordinate: List[float], discreteCoordinate: List[str]) -> float:
+        print("Проверка тестовой выборки в лучшей точке: ", coordinate, discreteCoordinate)
+
+        focal_alpha, cnn_embedding_dim, lr_fuzzy, backbone_feature_dim_options = coordinate[0], int(coordinate[1]), coordinate[2], int(coordinate[3])
+
+        num_rules, backbone_name = int(discreteCoordinate[0]), discreteCoordinate[1]
+
+        model_params = None
+
+        tmp_params_dict = {
+            'focal_alpha': focal_alpha,
+            'cnn_embedding_dim': cnn_embedding_dim,
+            'lr_fuzzy': lr_fuzzy,
+            'backbone_feature_dim_options': backbone_feature_dim_options,
+            'num_rules': num_rules,
+            'backbone_name': backbone_name
+        }
+
+
+        json_files = list(Path(self.model_save_path).glob("*.json"))
+        for json_file in json_files:
+            with open(json_file, "r", encoding="utf-8") as f:
+                current_params_dict = json.load(f)
+                if self.match_by_fields(current_params_dict, tmp_params_dict,
+                                        ['focal_alpha', 'cnn_embedding_dim', 'lr_fuzzy', 'backbone_feature_dim_options', 'num_rules', 'backbone_name']):
+                    model_params = current_params_dict
+                    metric = float(json_file.stem)
+                    break
+
+        if model_params is None:
+            print("Среди чекпоинтов не найден целевой!")
+            return -1
+
+        target_path = self.model_save_path.joinpath(f"{metric}.pth")
+        print("Лучшая модель: ", target_path)
+
+        config = FuzzyCNNConfig(
+            backbone_name=backbone_name,
+            input_channels=23,
+            input_width=2560,
+            backbone_feature_dim=backbone_feature_dim_options,
+            cnn_embedding_dim=cnn_embedding_dim,
+            num_rules=num_rules,
+            backbone_dropout=0.3,
+            dropout_rate=0.3,
+            projection_dropout=0.3,
+            use_batch_norm=True,
+            extra_params={} if backbone_name != 'densenet' else {'growth_rate': 32, 'n_layers': 4}
+        )
+
+        model = CNNWithFuzzy(config)
+
+        model.load_state_dict(torch.load(target_path, map_location=self.device))
+        model.eval()
+
+        trainer = FuzzyCNNTrainer(
+            model=model,
+            train_loader=self.train_loader,
+            val_loader=self.val_loader,
+            test_loader=self.test_loader,
+            loss_type='focal',  # 'bce', 'weighted_bce', 'focal'
+            loss_params={
+                'alpha': focal_alpha,  # Вес для положительного класса
+                'gamma': 2.0  # Фокусирующий параметр
+            },
+            device='cuda' if torch.cuda.is_available() else 'cpu',
+            save_dir='checkpoints',
+            experiment_name=f"{config.backbone_name}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        )
+
+        metrics, _, _ = trainer.test(self.test_loader)
+
+        print("Значение целевой метрики на валидационной выборке: ", abs(metric))
+        print("Значение целевой метрики на тестовой выборке: ", metrics['mcc'])
+
+        return metrics['mcc']
+
+
 if __name__ == '__main__':
-    problem_eeg_class = EEGProblem()
+    eegProblem = EEGProblem()
+    problem = GlobalizerProblem(eegProblem)
+    result = problem.calculate([0.75, 64, 1e-2, 512],['16', 'simple'])
+    problem.finalize([0.75, 64, 1e-2, 512], ['16', 'simple'])
+    print(result)

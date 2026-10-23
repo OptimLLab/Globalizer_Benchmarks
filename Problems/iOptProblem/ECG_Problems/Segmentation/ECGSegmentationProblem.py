@@ -9,6 +9,9 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.utils.data import DataLoader, Dataset
+import json
+import os
+import uuid
 
 sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 from trial import Point
@@ -673,19 +676,10 @@ class ECGSegmentationProblem(Problem):
         self.model_save_path = Path("models")
         if not Path.exists(self.model_save_path):
             Path.mkdir(self.model_save_path)
-
         self.data_dir = Path("dataset/ECGSegmentation")
         self.signal_suffix = str("_signal.npy")
         self.labels_suffix = str("_labels.npy")
-
         self.samples = collect_samples(self.data_dir, signal_suffix=self.signal_suffix, labels_suffix=self.labels_suffix)
-        # train_s, val_s = train_val_split(
-        #     self.samples,
-        #     val_frac=0.2,
-        #     seed=42,
-        #     shuffle=True,
-        # )
-
         train_s, val_s, test_s = train_val_test_split(
             self.samples,
             val_frac=0.15,
@@ -693,26 +687,18 @@ class ECGSegmentationProblem(Problem):
             seed=42,
             shuffle=True,
         )
-
         self.signal_layout = "channels_first"
         self.label_channel_idx = 0
         self.normalize = True
-
-
         self.train_ds = NpySegmentationDataset(train_s, normalize=self.normalize, label_channel_idx=self.label_channel_idx,
                                           signal_layout=self.signal_layout)
         self.val_ds = NpySegmentationDataset(val_s, normalize=self.normalize, label_channel_idx=self.label_channel_idx,
                                         signal_layout=self.signal_layout)
         self.test_ds = NpySegmentationDataset(test_s, normalize=self.normalize, label_channel_idx=self.label_channel_idx,
                                         signal_layout=self.signal_layout)
-
         self.batch_size = 128
-
-
-
         self.x0, self.y0 = self.train_ds[0]
         self.in_channels = int(self.x0.shape[0])
-
         self.num_classes = None
         if self.num_classes is None:
             self.num_classes = infer_num_classes(self.samples, label_channel_idx=self.label_channel_idx)
@@ -741,7 +727,6 @@ class ECGSegmentationProblem(Problem):
                                 pin_memory=(str(self.device).startswith("cpu")))
         self.test_loader = DataLoader(self.test_ds, batch_size=self.batch_size, shuffle=False, num_workers=0,
                                 pin_memory=(str(self.device).startswith("cpu")))
-
         self.float_variable_names = np.array(["P parameter", "Depth"], dtype=str)
         self.lower_bound_of_float_variables = [0.0, 2.0]
         self.upper_bound_of_float_variables = [1.0, 5.0]
@@ -749,7 +734,12 @@ class ECGSegmentationProblem(Problem):
 
     def calculate(self, point: Point, function_value: FunctionValue) -> FunctionValue:
         p, d = point.float_variables[0], point.float_variables[1]
-        print("Calc ", p, d)
+
+        model_params = {
+            'p': p,
+            'd': d
+        }
+
         model = UNet1D(
             in_channels=self.in_channels,
             num_classes=self.num_classes,
@@ -784,12 +774,11 @@ class ECGSegmentationProblem(Problem):
             weight_decay=0.0,
         )
 
-
-        num_workers = 0
-
-
-        epochs = 10
-        best = -1e18
+        epochs = 3
+        best = -float("inf")
+        best_path = None
+        save_dir = "chekpoints"
+        train_id = uuid.uuid4()
         for epoch in range(1, epochs + 1):
             tr = train_one_epoch(model, self.train_loader, optim, criterion, self.device)
             va = evaluate(model, self.val_loader, criterion, self.device)
@@ -808,58 +797,75 @@ class ECGSegmentationProblem(Problem):
             score = float(logs["val_macro_f1"])
             if score > best:
                 best = score
-                self.save_model(model, -best, p, d)
+                os.makedirs(save_dir, exist_ok=True)
+                best_path = os.path.join(save_dir, f"{train_id}.pt")
+                torch.save(model.state_dict(), best_path)
+
+        if best_path is not None and os.path.exists(best_path):
+            model.load_state_dict(torch.load(best_path, map_location=self.device))
 
         function_value.value = -best
+        self.save_model(model, function_value.value, model_params)
         return function_value
 
-    def save_model(self, model, metric, param1, param2):
+    def save_model(self, model, metric, params_dict):
         files = [f for f in self.model_save_path.iterdir() if f.is_file()]
 
         for f in files:
-            f_metric = float(f.stem.split("_")[0])
+            f_metric = float(f.stem)
             if f_metric < metric:
                 return
 
-        print("Модель сохранена: ", metric, param1, param2)
-
-        local_path = self.model_save_path.joinpath(f"{metric}_{param1}_{param2}.pth")
+        print("Модель сохранена: ", metric, params_dict)
+        local_path = self.model_save_path.joinpath(f"{metric}.pth")
         torch.save(model.state_dict(), local_path)
+        with open(self.model_save_path.joinpath(f"{metric}.json"), "w", encoding="utf-8") as f:
+            json.dump(params_dict, f, ensure_ascii=False, indent=2)
+
+    def match_by_fields(self, d1, d2, fields):
+        return all(d1.get(f) == d2.get(f) for f in fields)
 
     def finalize(self, coordinate: List[float], discreteCoordinate: List[str]) -> float:
-        """
-        The process that occurs after the solution search procedure
-        return: Calculated values of target metric"""
-
         print("Проверка тестовой выборки в лучшей точке: ", coordinate, discreteCoordinate)
 
-        files = [f for f in self.model_save_path.iterdir() if f.is_file()]
-        target_path = ""
+        p, d = coordinate[0], coordinate[1]
 
-        for f in files:
-            cur_path = ""
-            for param in coordinate:
-                cur_path += "_" + str(param)
+        model_params = None
 
-            if cur_path in str(f):
-                val_metric = abs(float(f.stem.split("_")[0]))
-                target_path = self.model_save_path.joinpath(f.name)
-                break
+        tmp_params_dict = {
+            'p': p,
+            'd': d
+        }
 
+        json_files = list(Path(self.model_save_path).glob("*.json"))
+        for json_file in json_files:
+            with open(json_file, "r", encoding="utf-8") as f:
+                current_params_dict = json.load(f)
+                if self.match_by_fields(current_params_dict, tmp_params_dict,
+                                        ['num_blocks', 'growth_rate', 'kernel_size', 'dropout']):
+                    model_params = current_params_dict
+                    metric = float(json_file.stem)
+                    break
+
+        if model_params is None:
+            print("Среди чекпоинтов не найден целевой!")
+            return -1
+
+        target_path = self.model_save_path.joinpath(f"{metric}.pth")
         print("Лучшая модель: ", target_path)
 
         model = UNet1D(
             in_channels=self.in_channels,
             num_classes=self.num_classes,
             base_filters=32,
-            depth=int(coordinate[1]),
+            depth=int(model_params['d']),
             channel_mult=2,
             max_filters=None,
             num_convs_per_block=2,
             conv_kernel=3,
             norm="bn",
             act="relu",
-            dropout=coordinate[0],
+            dropout=model_params['p'],
             gn_groups=8,
             pool="max",
             pool_kernel=2,
@@ -868,22 +874,21 @@ class ECGSegmentationProblem(Problem):
             bottleneck_num_convs=None,
         ).to(self.device)
         model.load_state_dict(torch.load(target_path, map_location=self.device))
-        model.eval()
 
-        all_preds = []
-        all_labels = []
+
+        criterion = build_loss(
+            str("dice_ce"),
+            weight_ce=1.0,
+            weight_dice=1.0,
+            dice_smooth=1e-6,
+            include_background=False,
+        ).to(self.device)
 
         with torch.no_grad():
-            for X_batch, y_batch in self.test_loader:
-                X_batch = X_batch.to(self.device)
-                y_batch = y_batch.to(self.device)
-                output = model(X_batch)
-                preds = output.argmax(dim=1)
-                all_preds.extend(preds.cpu().numpy())
-                all_labels.extend(y_batch.cpu().numpy())
+            test_metrics = evaluate(model, self.test_loader, criterion, self.device)
 
-        finish_metric = f1_score(all_labels, all_preds, average='macro')
-        print("Значение целевой метрики на валидационной выборке: ", val_metric)
+        finish_metric = test_metrics['macro_f1']
+        print("Значение целевой метрики на валидационной выборке: ", metric)
         print("Значение целевой метрики на тестовой выборке: ", finish_metric)
 
         return finish_metric
@@ -892,7 +897,6 @@ class ECGSegmentationProblem(Problem):
 if __name__ == '__main__':
     problem_ecg_class = ECGSegmentationProblem(2,0)
     problem = GlobalizerProblem(problem_ecg_class)
-    bound = problem.get_lower_bounds()
-    print(bound)
     result = problem.calculate([0.3, 4],[])
+    problem.finalize([0.3, 4],[])
     print(result)

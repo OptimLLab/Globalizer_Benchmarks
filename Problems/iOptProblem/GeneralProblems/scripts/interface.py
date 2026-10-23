@@ -1,8 +1,8 @@
 from abc import ABC, abstractclassmethod
 
-from Tests.metrics import Metric
-from Tests.data.loader import Dataset
-from Tests.hyperparams import Hyperparameter, Categorial
+from scripts.metrics import Metric
+from scripts.data.loader import Dataset
+from scripts.hyperparams import Hyperparameter, Categorial
 from dataclasses import dataclass
 from time import time
 

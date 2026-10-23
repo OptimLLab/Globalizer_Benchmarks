@@ -9,7 +9,7 @@ from sklearn.metrics import (
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler, MinMaxScaler, MaxAbsScaler
 
-import Tests.data as data
+import scripts.data as data
 
 
 PREPROCESSING = {

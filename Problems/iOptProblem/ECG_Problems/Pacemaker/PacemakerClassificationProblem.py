@@ -150,16 +150,12 @@ class PacemakerClassificationProblem(Problem):
 
         for f in files:
             f_metric = float(f.stem)
-            print("Метрика старая: ", f_metric)
-            print("Метрика текущая: ", metric)
             if f_metric < metric:
                 return
 
         print("Модель сохранена: ", metric, params_dict)
-        # Сохранение модели
         local_path = self.model_save_path.joinpath(f"{metric}.pth")
         torch.save(model.state_dict(), local_path)
-        # Сохранение дополнительной информации: метрика, параметры - в json
         with open(self.model_save_path.joinpath(f"{metric}.json"), "w", encoding="utf-8") as f:
             json.dump(params_dict, f, ensure_ascii=False, indent=2)
 

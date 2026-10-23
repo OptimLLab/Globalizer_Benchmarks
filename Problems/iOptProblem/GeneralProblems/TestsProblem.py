@@ -1,26 +1,20 @@
 from functools import partial
-
-from ClassificationScripts.dataset import ECGDataset
-from ClassificationScripts.model import MobileNetV3Small1D
-from Tests.hyperparams import Numerical, Categorial, Hyperparameter
-from Tests.iOptSearcher import iOptSearcher
-from Tests.metrics import DATASET_TO_METRIC
-from trial import Point
-from trial import FunctionValue
-from problem import Problem
-from typing import Dict
-from sklearn.model_selection import train_test_split
+import sys
+from scripts.hyperparams import Numerical, Categorial, Hyperparameter
+from scripts.iOptSearcher import iOptSearcher
+from scripts.metrics import DATASET_TO_METRIC
 import numpy as np
-import wfdb
-from torch.utils.data import Dataset, DataLoader
-import torch
-import torch.nn as nn
-import os
-import Tests.data as data
-
+import scripts.data as data
+from pathlib import Path
 from sklearn.svm import SVC
 from xgboost import XGBClassifier
 from sklearn.neural_network import MLPClassifier
+
+sys.path.append(str(Path(__file__).resolve().parent.parent))
+from trial import Point
+from trial import FunctionValue
+from problem import Problem
+from Globalizer_problem import GlobalizerProblem
 
 NAME_TO_DATASET = {
     'balance': data.Balance,
@@ -169,3 +163,11 @@ class TestsProblem(Problem):
             for name, value in zip(self.discrete_variable_names, point.discrete_variables):
                 arguments[name] = int(value) if value.isnumeric() else value
         return arguments
+
+if __name__ == '__main__':
+    problem_ecg_class = TestsProblem('balance', 'svc')
+    problem = GlobalizerProblem(problem_ecg_class)
+    des = problem.get_discrete_params()
+    sp = problem.get_start_value()
+    result = problem.calculate([1e-7, 1e2], ['rbf'])
+    print(result)

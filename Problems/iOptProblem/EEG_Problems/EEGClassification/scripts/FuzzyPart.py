@@ -4,7 +4,7 @@ import timm
 from typing import Tuple, List, Dict, Any, Optional
 from dataclasses import dataclass, field
 import warnings
-from EEG.scripts.ModelArchitectures import *
+from scripts.ModelArchitectures import *
 
 
 class FuzzyTSKLayer(nn.Module):

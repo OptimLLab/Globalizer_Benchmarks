@@ -16,7 +16,7 @@ import math
 from torchvision import models
 from datetime import datetime, date, timedelta
 import time
-from EEG.scripts.Metrics import *
+from scripts.Metrics import *
 import torch.optim as optim
 from sklearn.metrics import confusion_matrix, roc_curve, roc_auc_score, classification_report
 from torch.optim.lr_scheduler import ReduceLROnPlateau, CosineAnnealingWarmRestarts
@@ -347,7 +347,7 @@ class FuzzyCNNTrainer:
         all_preds = np.array(all_preds)
         all_labels = np.array(all_labels)
 
-        metrics = self.metrics.calculate(all_preds, all_labels)
+        metrics = self.metrics.calculate_metrics(all_preds, all_labels)
 
         try:
             metrics['auc'] = roc_auc_score(all_labels, all_preds)

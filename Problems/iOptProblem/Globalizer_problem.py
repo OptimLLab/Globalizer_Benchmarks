@@ -124,13 +124,6 @@ class GlobalizerProblem:
 
     def set_dimension(self, dimension: int):
         pass
-    #     self.dimension = dimension
-    #     #self.problem: Problem = Rastrigin(dimension=dimension)
-    #     self.current_coordinate = [0] * dimension
-    #     self.point: Point = Point(float_variables=np.array(self.current_coordinate), discrete_variables=None)
-    #     self.function_value: FunctionValue = FunctionValue()
-    #     #self.result = self.problem.calculate(self.point, self.function_value)
-    #     #self.result_value = float(self.result.value)
     
     def finalize(self, coordinate: List[float], discreteCoordinate: List[str]):
         self.problem.finalize(coordinate, discreteCoordinate)
@@ -241,41 +234,9 @@ def get_problem_parameters_names(class_name: str)->List[str]:
 #     #print("transformator SVC 3D in (6.0, -2.0, rbf) = " + str(result))
 #     default_result = problem_transformator.default_calculate()
 #     print("transformator SVC 3D default value = " + str(default_result))
-#
-#
-# def test_ecg_segmentation_problem_main():
-#     problem_ecg_class = ECGSegmentationProblem(5,0)
-#
-#     problem = GlobalizerProblem(problem_ecg_class)
-#
-#     bound = problem.get_lower_bounds()
-#     print(bound)
-#     result = problem.calculate([4, 2, 0.3, 0.0005],['relu'])
-#     print(result)
-#
-# def test_eegproblem():
-#     eegProblem = EEGProblem()
-#
-#     problem = GlobalizerProblem(eegProblem)
-#
-#     result = problem.calculate([0.75, 64, 1e-2, 512],['16', 'simple'])
-#     print(result)
-#
-# def test_pacemaker_problem():
-#     pacemakerProblem = PacemakerClassificationProblem()
-#
-#     problem = GlobalizerProblem(pacemakerProblem)
-#
-#     result = problem.calculate([2, 16, 0.2, 0.0001, 0.00005, 0.5, 1.0, 3], [])
-#     print(result)
-#
-# #def test_air_object_detected_problem():
-# #    problem_class = AirObjectDetectionProblem(2)
-# #    problem = GlobalizerProblem(problem_class)
-# #    bound = problem.get_lower_bounds()
-# #    print(bound)
-# #    result = problem.calculate([-3.0], ["32", "5"])
-# #    print(result)
+
+
+
 #
 # if __name__ == "__main__":
 #     test_pacemaker_problem()

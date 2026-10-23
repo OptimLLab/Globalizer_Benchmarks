@@ -31,8 +31,8 @@ class ImbalancedMetrics:
 
         # Matthews Correlation Coefficient
         mcc_num = tp * tn - fp * fn
-        mcc_den = np.sqrt((tp + fp) * (tp + fn) * (tn + fp) * (tn + fn)) + eps
-        mcc = mcc_num / mcc_den
+        mcc_den = np.sqrt((tp + fp) * (tp + fn) * (tn + fp) * (tn + fn))
+        mcc = float(mcc_num / mcc_den) if mcc_den > 0 else 0.0
 
         # G-mean
         g_mean = np.sqrt(recall * specificity)

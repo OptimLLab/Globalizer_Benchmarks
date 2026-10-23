@@ -11,7 +11,7 @@ from pathlib import Path
 from sklearn.metrics import f1_score
 import torch
 import torch.nn as nn
-import os
+import json
 
 sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 from trial import Point
@@ -161,31 +161,36 @@ class ECGClassificationProblem(Problem):
     def calculate(self, point: Point, function_value: FunctionValue) -> FunctionValue:
         p, f = point.float_variables[0], point.float_variables[1]
 
+        model_params = {
+            'p': p,
+            'f': f
+        }
         model = MobileNetV3Small1D(in_channels=2, num_classes=3, p=p, o_features=int(f))
         macro_F1 = train(model, self.train_loader, self.val_loader, epochs=100, lr=1e-3, gpu_id=self.gpu_id)
 
         function_value.value = -macro_F1
 
-        self.save_model(model, function_value.value, p, f)
+        self.save_model(model, function_value.value, model_params)
 
-        print('p ' + f"{p:.9f}"+ '\tfeatures ' + f"{f:.9f}" + "\tvalue " + f"{function_value.value:.9f}", flush=True)
         return function_value
 
-    def save_model(self, model, metric, param1, param2):
+    def save_model(self, model, metric, params_dict):
         files = [f for f in self.model_save_path.iterdir() if f.is_file()]
-        
+
         for f in files:
-            f_metric = float(f.stem.split("_")[0])
-            print("Метрика старая: ", f_metric)
-            print("Метрика текущая: ", metric)
+            f_metric = float(f.stem)
             if f_metric < metric:
                 return
-        
-        print("Модель сохранена: ", metric, param1, param2)
 
-        local_path = self.model_save_path.joinpath(f"{metric}_{param1}_{param2}.pth")
+        print("Модель сохранена: ", metric, params_dict)
+        local_path = self.model_save_path.joinpath(f"{metric}.pth")
         torch.save(model.state_dict(), local_path)
+        with open(self.model_save_path.joinpath(f"{metric}.json"), "w", encoding="utf-8") as f:
+            json.dump(params_dict, f, ensure_ascii=False, indent=2)
 
+
+    def match_by_fields(self, d1, d2, fields):
+        return all(d1.get(f) == d2.get(f) for f in fields)
 
     def finalize(self, coordinate: List[float], discreteCoordinate: List[str]) -> float:
         """
@@ -193,25 +198,34 @@ class ECGClassificationProblem(Problem):
         return: Calculated values of target metric"""
         
         print("Проверка тестовой выборки в лучшей точке: ", coordinate, discreteCoordinate)
+        p, f = coordinate[0], coordinate[1]
+
+        model_params = None
+
+        tmp_params_dict = {
+            'p': p,
+            'f': f
+        }
 
 
-        files = [f for f in self.model_save_path.iterdir() if f.is_file()]
-        target_path = ""
-        
-        for f in files:
-            cur_path = ""
-            for param in coordinate:
-                cur_path += "_" + str(param)
+        json_files = list(Path(self.model_save_path).glob("*.json"))
+        for json_file in json_files:
+            with open(json_file, "r", encoding="utf-8") as f:
+                current_params_dict = json.load(f)
+                if self.match_by_fields(current_params_dict, tmp_params_dict,
+                                        ['num_blocks', 'growth_rate', 'kernel_size', 'dropout']):
+                    model_params = current_params_dict
+                    metric = float(json_file.stem)
+                    break
 
-            if cur_path in str(f):
-                val_metric = abs(float(f.stem.split("_")[0]))
-                target_path = self.model_save_path.joinpath(f.name)
-                break
-        
+        if model_params is None:
+            print("Среди чекпоинтов не найден целевой!")
+            return -1
+
+        target_path = self.model_save_path.joinpath(f"{metric}.pth")
         print("Лучшая модель: ", target_path)
-        
 
-        model = MobileNetV3Small1D(in_channels=2, num_classes=3, p=coordinate[0], o_features=int(coordinate[1]))
+        model = MobileNetV3Small1D(in_channels=2, num_classes=3, p=model_params['p'], o_features=int(model_params['f']))
         model.load_state_dict(torch.load(target_path, map_location=self.device))
         model.eval()
 
@@ -228,7 +242,7 @@ class ECGClassificationProblem(Problem):
                 all_labels.extend(y_batch.cpu().numpy())
 
         finish_metric = f1_score(all_labels, all_preds, average='macro')
-        print("Значение целевой метрики на валидационной выборке: ", val_metric)
+        print("Значение целевой метрики на валидационной выборке: ", metric)
         print("Значение целевой метрики на тестовой выборке: ", finish_metric)
 
         return finish_metric
@@ -237,8 +251,6 @@ class ECGClassificationProblem(Problem):
 if __name__ == '__main__':
     problem_ecg_class = ECGClassificationProblem(2)
     problem = GlobalizerProblem(problem_ecg_class)
-
-    bound = problem.get_lower_bounds()
-    print(bound)
     result = problem.calculate([0.3, 100], [])
+    problem.finalize([0.3, 100], [])
     print(result)
