@@ -87,11 +87,11 @@ if __name__ == '__main__':
 
     path = None
     if args.source == 'local':
-        path = Path(task_links[args.task_class][1]) #("./datasets")
+        path = Path(task_links[args.task_class][1])
     if args.source == 'global':
         path = contains_build_folder(find_project_folder("Globalizer"))
         if path:
-            path = Path(os.path.join(path, 'datasets'))
+            path = Path(os.path.join(path, 'dataset'))
             print(f"Папка найдена: {path}")
         else:
             raise FileNotFoundError("Папка не найдена! Возможно вы не собрали проект. Работа загрузчика остановлена ")
