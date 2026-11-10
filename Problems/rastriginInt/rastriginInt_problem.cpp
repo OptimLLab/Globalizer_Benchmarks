@@ -29,11 +29,16 @@ int RastriginIntProblem::GetOptimumValue(double& value) const
   if (!this->mIsInitialized)
     return IGlobalOptimizationProblem::PROBLEM_UNDEFINED;
 
-  value = -mRightBorder;
-
   if (IsMultInt == true)
   {
-    value = value * optMultKoef;
+
+    std::vector<double> point;
+    std::vector<std::string> u;
+
+    GetOptimumPoint(point, u);
+
+    value = const_cast<RastriginIntProblem*>(this)->CalculateFunctionals(point, u, 0);
+
   }
 
   return IGlobalOptimizationProblem::PROBLEM_OK;
@@ -179,6 +184,9 @@ int RastriginIntProblem::Initialize()
   A.resize(this->mDimension);
   B.resize(this->mDimension);
   this->GetBounds(A, B);
+
+  multKoef = 0;
+  optMultKoef = 0;
 
   optPoint.resize(this->mDimension);
   std::vector<std::string> u(this->mDimension);
