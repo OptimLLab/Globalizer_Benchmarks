@@ -126,7 +126,7 @@ class GlobalizerProblem:
         pass
     
     def finalize(self, coordinate: List[float], discreteCoordinate: List[str]):
-        self.problem.finalize(coordinate, discreteCoordinate)
+        return self.problem.finalize(coordinate, discreteCoordinate)
 
 def get_problem_parameters_names(class_name: str)->List[str]:
     if class_name == 'Rastrigin':
